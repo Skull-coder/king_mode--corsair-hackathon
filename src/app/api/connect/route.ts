@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    const plugin = searchParams.get("plugin") || "gmail"; // 'gmail' or 'googlecalendar'
+    const plugin = searchParams.get("plugin") || "googlecalendar"; // 'gmail' or 'googlecalendar'
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth`;
 
     const { url, state } = await generateOAuthUrl(corsair, plugin, {

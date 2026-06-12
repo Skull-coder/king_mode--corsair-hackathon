@@ -4,7 +4,8 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/webhooks(.*)' // CRITICAL: This allows Clerk and Corsair servers to talk to your API
+  '/api/webhooks(.*)', // CRITICAL: This allows Clerk and Corsair servers to talk to your API
+  '/api/sse(.*)'        // SSE endpoint — public so EventSource can connect
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

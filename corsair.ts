@@ -3,27 +3,14 @@ import { createCorsair } from "corsair";
 import { gmail } from "@corsair-dev/gmail";
 import { googlecalendar } from "@corsair-dev/googlecalendar";
 import { pool } from "./src/lib/db";
-import { emails, threads } from "@/lib/db/schema";
-import { db } from "@/lib/db";
-import { eq } from "drizzle-orm";
-import { generateEmbedding } from "@/lib/ai/embeddings";
-import { classifyEmail } from "@/lib/ai/classify";
-import { waitUntil } from "@vercel/functions";
 
 export const corsair = createCorsair({
   multiTenancy: true,
   plugins: [
     gmail({
-      webhookHooks: {
-        messageChanged: {
-          after: async (ctx, response) => {
-            console.log("-----------------")
-            console.log("RESPONSE: ", response)
-            console.log("-----------------")
-            console.log("CTX:", ctx)
-          }
-        },
-      },
+      // No webhook hooks — we don't sync to our own DB anymore.
+      // The webhook is purely a "something changed" signal that
+      // triggers an SSE → TanStack Query invalidation on the frontend.
     }),
     googlecalendar({ authType: "oauth_2" }),
   ],

@@ -1,38 +1,11 @@
-import { deepseekClient } from './client';
-import { db } from '@/lib/db';
-import { emails } from '@/lib/db/schema/users';
-import { eq } from 'drizzle-orm';
+// AI email summarization — currently disabled in live-fetch mode.
+// Previously this read from our local emails table.
+// In the new architecture, emails are fetched live from Gmail via Corsair.
+// Re-enable by accepting raw email content instead of an emailId.
 
-export async function summarizeEmail(emailId: string): Promise<string> {
-  try {
-    // 1. Fetch the exact email from your database
-    const emailRecord = await db.query.emails.findFirst({
-      where: eq(emails.id, emailId)
-    });
+// import { deepseekClient } from './client';
 
-    if (!emailRecord) throw new Error("Email not found in database");
-
-    // 2. Ask DeepSeek to compress it
-    const response = await deepseekClient.chat.completions.create({
-      model: "deepseek-chat",
-      messages: [
-        {
-          role: "system",
-          content: "You are a highly efficient executive assistant. Summarize the provided email into range of 3-5 concise bullet points. Focus on actions, deadlines, and core facts. Do not use conversational filler."
-        },
-        {
-          role: "user",
-          content: `Subject: ${emailRecord.subject}\n\nBody: ${emailRecord.rawBody}`
-        }
-      ],
-      temperature: 0.2, // Keep it highly factual
-      max_tokens: 150,
-    });
-
-    return response.choices[0]?.message?.content || "Could not generate summary.";
-
-  } catch (error) {
-    console.error("Summarization failed:", error);
-    return "Error generating summary.";
-  }
+export async function summarizeEmail(_emailId: string): Promise<string> {
+  console.warn("summarizeEmail: not available in live-fetch mode (no local email DB)");
+  return "Summarization unavailable in live-fetch mode.";
 }

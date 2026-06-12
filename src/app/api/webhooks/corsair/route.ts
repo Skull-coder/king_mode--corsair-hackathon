@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { processWebhook } from "corsair";
 import { corsair } from "@/../corsair";
+import { broadcastRefresh } from "@/lib/sse/manager";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,8 +21,12 @@ export async function POST(request: NextRequest) {
 
     const headers = Object.fromEntries(request.headers.entries());
 
-    // 1. DYNAMIC TENANT RESOLUTION
-    let targetTenantId = "default";
+    // Resolve tenant from the PubSub payload
+    const userId = (await auth()).userId;
+    let targetTenantId = "user_3Et5ewXYffpTxJgBAwingvrqI1v";
+    
+
+    if(!targetTenantId) throw new Error("You are not authorized")
 
     if (body?.message?.data) {
       try {
@@ -40,18 +46,21 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (decodeError) {
-        console.error("❌ Failed parsing tenant email from PubSub payload:", decodeError);
+        console.error("Failed parsing tenant email from PubSub payload:", decodeError);
       }
     }
 
-    // 2. Process webhook through Corsair (This automatically runs the hook configured above!)
+    // Process webhook through Corsair
     const result = await processWebhook(corsair, headers, body, {
       tenantId: targetTenantId,
     });
 
-    console.log("✅ Webhook processed and pipeline complete.");
+    console.log("Webhook processed");
 
-    // 3. Prepare response headers
+    // Emit SSE "refresh" signal — triggers TanStack Query invalidation on frontend.
+    // We don't parse the webhook payload deeply. It's just a "something changed" ping.
+    broadcastRefresh();
+
     const responseHeaders = (result as any).responseHeaders ?? {};
     const nextHeaders = new Headers();
     for (const [key, value] of Object.entries(responseHeaders)) {
