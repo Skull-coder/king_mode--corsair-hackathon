@@ -31,6 +31,9 @@ export interface ParsedEmail {
   isInbox: boolean;
   isImportant: boolean;
 
+  // Draft ID — only set when coming from drafts.list
+  draftId?: string;
+
   // Raw — for debugging
   _raw: unknown;
 }

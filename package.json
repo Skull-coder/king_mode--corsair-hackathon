@@ -27,7 +27,8 @@
     "pgvector": "^0.3.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@corsair-dev/cli": "^0.1.19",

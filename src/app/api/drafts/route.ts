@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCorsairTenant } from "@/lib/corsair-client";
 import { parseEmail } from "@/lib/email-parser";
+import { normalizeRecipients } from "@/lib/normalize-recipients";
 
 /**
  * GET  /api/drafts              → list drafts with pagination
@@ -47,10 +48,14 @@ export async function POST(request: NextRequest) {
 
     const { to = [], cc = [], bcc = [], subject = "", body: draftBody = "", threadId } = body;
 
+    const toArr = normalizeRecipients(to);
+    const ccArr = normalizeRecipients(cc);
+    const bccArr = normalizeRecipients(bcc);
+
     const mimeMessage = [
-      `To: ${to.join(", ")}`,
-      `Cc: ${cc.join(", ")}`,
-      `Bcc: ${bcc.join(", ")}`,
+      `To: ${toArr.join(", ")}`,
+      `Cc: ${ccArr.join(", ")}`,
+      `Bcc: ${bccArr.join(", ")}`,
       `Subject: ${subject}`,
       "Content-Type: text/plain; charset=UTF-8",
       "",
