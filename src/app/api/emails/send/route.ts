@@ -12,28 +12,37 @@ export async function POST(request: NextRequest) {
     const { tenant } = await getCorsairTenant();
     const body = await request.json();
 
-    const { to = [], cc = [], bcc = [], subject = "", body: emailBody = "", threadId } = body;
+    const {
+      to = [],
+      cc = [],
+      bcc = [],
+      subject = "",
+      body: emailBody = "",
+      threadId,
+      inReplyToMessageId, // Gmail's RFC Message-ID header value, e.g. "<abc123@mail.gmail.com>"
+      references,         // accumulated References header, e.g. "<msg1> <msg2>"
+    } = body;
 
     const toArr = normalizeRecipients(to);
     const ccArr = normalizeRecipients(cc);
     const bccArr = normalizeRecipients(bcc);
 
-    const mimeMessage = [
+    const headers = [
       `To: ${toArr.join(", ")}`,
       `Cc: ${ccArr.join(", ")}`,
       `Bcc: ${bccArr.join(", ")}`,
       `Subject: ${subject}`,
-      "Content-Type: text/plain; charset=UTF-8",
-      "",
-      emailBody,
-    ].join("\n");
+    ];
 
+    if (inReplyToMessageId) headers.push(`In-Reply-To: ${inReplyToMessageId}`);
+    if (references) headers.push(`References: ${references}`);
+
+    headers.push("Content-Type: text/plain; charset=UTF-8", "", emailBody);
+
+    const mimeMessage = headers.join("\n");
     const raw = Buffer.from(mimeMessage).toString("base64url");
 
-    const result = await tenant.gmail.api.messages.send({
-      raw,
-      threadId,
-    });
+    const result = await tenant.gmail.api.messages.send({ raw, threadId });
 
     return NextResponse.json(result);
   } catch (error: any) {

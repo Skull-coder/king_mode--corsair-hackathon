@@ -3,6 +3,10 @@ import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from "@cl
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
+import { ToastProvider } from "@/lib/hooks/useToast";
+import { Sidebar } from "@/components/Sidebar";
+import { ComposeFAB } from "@/components/ComposeFAB";
+import { ToastContainer } from "@/components/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +34,20 @@ export default function RootLayout({
         <ClerkProvider>
           <Providers>
         
-            {children}
+                <ToastProvider>
+                  <div className="flex h-screen bg-[#0e1116] text-white overflow-hidden font-sans">
+                    <Sidebar />
+                    
+                    <main className="flex-1 overflow-y-auto relative flex flex-col">
+                      {children}
+                    </main>
+            
+                    {/* Inject the FAB and Modal logic here
+                    <ComposeFAB /> */}
+                    
+                  </div>
+                  <ToastContainer />
+                </ToastProvider>
           </Providers>
         </ClerkProvider>
       </body>

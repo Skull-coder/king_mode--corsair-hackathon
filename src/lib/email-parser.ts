@@ -31,6 +31,9 @@ export interface ParsedEmail {
   isInbox: boolean;
   isImportant: boolean;
 
+  messageIdHeader: string,
+  references: string,
+
   // Draft ID — only set when coming from drafts.list
   draftId?: string;
 
@@ -103,6 +106,8 @@ export function parseEmail(raw: any): ParsedEmail {
     isSent: labelIds.includes("SENT"),
     isInbox: labelIds.includes("INBOX"),
     isImportant: labelIds.includes("IMPORTANT"),
+    messageIdHeader: getHeader(headers, "Message-ID"),
+    references: getHeader(headers, "References"),
     _raw: raw,
   };
 }

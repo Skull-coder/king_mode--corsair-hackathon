@@ -63,14 +63,19 @@ export function useSendEmail() {
       subject: string;
       body: string;
       threadId?: string;
+      inReplyToMessageId?: string;
+      references?: string;
     }) =>
       fetch(`${API}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then((r) => r.json()),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["emails"] });
+      if (variables.threadId) {
+        qc.invalidateQueries({ queryKey: ["threads", variables.threadId] });
+      }
     },
   });
 }

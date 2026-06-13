@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useEmails } from "@/lib/hooks/useEmails";
 import { useSSE } from "@/lib/hooks/useSSE";
 import { EmailList } from "@/components/EmailList";
 import { EmailListSkeleton } from "@/components/LoadingSkeleton";
+import { ComposeModal } from "@/components/ComposeModal";
 import Link from "next/link";
+import type { ParsedEmail } from "@/lib/email-parser";
 
 export default function DraftsPage() {
   useSSE();
@@ -12,6 +15,9 @@ export default function DraftsPage() {
     useEmails("DRAFT");
 
   const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
+
+  // State for editing a draft via ComposeModal
+  const [editingDraft, setEditingDraft] = useState<ParsedEmail | null>(null);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0e1116] text-white overflow-y-auto">
@@ -61,9 +67,22 @@ export default function DraftsPage() {
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={() => fetchNextPage()}
+            onEmailClick={(email) => setEditingDraft(email)}
           />
         )}
       </div>
+
+      {/* ComposeModal for editing drafts */}
+      <ComposeModal
+        isOpen={!!editingDraft}
+        onClose={() => setEditingDraft(null)}
+        initialTo={editingDraft?.to || ""}
+        initialSubject={
+          editingDraft?.subject === "(No Subject)" ? "" : editingDraft?.subject || ""
+        }
+        initialBody={editingDraft?.textBody || editingDraft?.htmlBody || ""}
+        draftId={editingDraft?.draftId}
+      />
     </div>
   );
 }

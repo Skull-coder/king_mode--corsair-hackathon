@@ -1,19 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/lib/hooks/useToast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ComposeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Prefill fields when editing an existing draft */
+  initialTo?: string;
+  initialSubject?: string;
+  initialBody?: string;
+  /** If set, we're editing an existing draft. Used for update + send. */
+  draftId?: string;
 }
 
-export function ComposeModal({ isOpen, onClose }: ComposeModalProps) {
+export function ComposeModal({
+  isOpen,
+  onClose,
+  initialTo = "",
+  initialSubject = "",
+  initialBody = "",
+  draftId,
+}: ComposeModalProps) {
   const { addToast } = useToast();
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  const qc = useQueryClient();
+  const [to, setTo] = useState(initialTo);
+  const [subject, setSubject] = useState(initialSubject);
+  const [body, setBody] = useState(initialBody);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset form when modal opens with new data
+  useEffect(() => {
+    if (isOpen) {
+      setTo(initialTo);
+      setSubject(initialSubject);
+      setBody(initialBody);
+    }
+  }, [isOpen, initialTo, initialSubject, initialBody]);
 
   if (!isOpen) return null;
 
@@ -22,20 +46,32 @@ export function ComposeModal({ isOpen, onClose }: ComposeModalProps) {
       addToast("error", "Cannot save an empty draft");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/drafts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, body }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save draft");
-      
-      addToast("success", "Draft saved successfully");
+      if (draftId) {
+        // Update existing draft
+        const res = await fetch(`/api/drafts/${draftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, subject, body }),
+        });
+        if (!res.ok) throw new Error("Failed to update draft");
+        addToast("success", "Draft updated");
+      } else {
+        // Create new draft
+        const res = await fetch("/api/drafts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, subject, body }),
+        });
+        if (!res.ok) throw new Error("Failed to save draft");
+        addToast("success", "Draft saved");
+      }
+      qc.invalidateQueries({ queryKey: ["drafts"] });
+      qc.invalidateQueries({ queryKey: ["emails"] });
       onClose();
-    } catch (error) {
+    } catch {
       addToast("error", "Failed to save draft");
     } finally {
       setIsSubmitting(false);
@@ -50,26 +86,28 @@ export function ComposeModal({ isOpen, onClose }: ComposeModalProps) {
 
     setIsSubmitting(true);
     try {
-      // Step 1: Create the draft first based on your API structure
-      const draftRes = await fetch("/api/drafts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, body }),
-      });
+      if (draftId) {
+        // Send existing draft directly
+        const sendRes = await fetch(`/api/drafts/${draftId}/send`, { method: "POST" });
+        if (!sendRes.ok) throw new Error("Failed to send");
+      } else {
+        // Create draft then send
+        const draftRes = await fetch("/api/drafts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, subject, body }),
+        });
+        if (!draftRes.ok) throw new Error("Failed to prepare email");
+        const draft = await draftRes.json();
+        const sendRes = await fetch(`/api/drafts/${draft.id}/send`, { method: "POST" });
+        if (!sendRes.ok) throw new Error("Failed to send email");
+      }
 
-      if (!draftRes.ok) throw new Error("Failed to prepare email");
-      const draft = await draftRes.json();
-
-      // Step 2: Send the created draft
-      const sendRes = await fetch(`/api/drafts/${draft.id || draft._id}/send`, {
-        method: "POST",
-      });
-
-      if (!sendRes.ok) throw new Error("Failed to send email");
-
-      addToast("success", "Email sent successfully");
+      addToast("success", "Email sent!");
+      qc.invalidateQueries({ queryKey: ["drafts"] });
+      qc.invalidateQueries({ queryKey: ["emails"] });
       onClose();
-    } catch (error) {
+    } catch {
       addToast("error", "Failed to send email");
     } finally {
       setIsSubmitting(false);
