@@ -14,6 +14,8 @@ interface EventModalProps {
   defaultStart?: Date;
   defaultEnd?: Date;
   defaultAllDay?: boolean;
+  /** Prefilled summary (e.g. from email subject) */
+  defaultSummary?: string;
 }
 
 type Attendee = {
@@ -36,6 +38,7 @@ export function EventModal({
   defaultStart,
   defaultEnd,
   defaultAllDay,
+  defaultSummary,
 }: EventModalProps) {
   const { addToast } = useToast();
   const { mutate: createEvent, isPending: isCreating } = useCreateEvent();
@@ -82,7 +85,7 @@ export function EventModal({
         }))
       );
     } else {
-      setSummary("");
+      setSummary(defaultSummary || "");
       setDescription("");
       setLocation("");
       setAllDay(defaultAllDay || false);

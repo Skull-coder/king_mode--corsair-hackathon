@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { processWebhook } from "corsair";
 import { corsair } from "@/../corsair";
 import { broadcastRefresh } from "@/lib/sse/manager";
-import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,58 +18,109 @@ export async function POST(request: NextRequest) {
       body = text?.trim() ? text : {};
     }
 
+    console.log("Raw webhook body:");
+    console.log(JSON.stringify(body, null, 2));
+
     const headers = Object.fromEntries(request.headers.entries());
 
-    // Resolve tenant from the PubSub payload
-    const userId = (await auth()).userId;
-    let targetTenantId = "user_3Et5ewXYffpTxJgBAwingvrqI1v";
-    
+    let targetTenantId: string | undefined;
 
-    if(!targetTenantId) throw new Error("You are not authorized")
-
+    // Gmail PubSub payload
     if (body?.message?.data) {
       try {
-        const decodedString = Buffer.from(body.message.data, "base64").toString("utf-8");
+        const decodedString = Buffer.from(
+          body.message.data,
+          "base64"
+        ).toString("utf8");
+
         const decodedPayload = JSON.parse(decodedString);
+
+        console.log("Decoded Gmail payload:");
+        console.log(decodedPayload);
+
         const incomingEmail = decodedPayload.emailAddress;
 
         if (incomingEmail) {
-          const match = await db
-            .select()
-            .from(users)
-            .where(eq(users.emailAddress, incomingEmail))
-            .limit(1);
+          const user = await db.query.users.findFirst({
+            where: eq(users.emailAddress, incomingEmail),
+          });
 
-          if (match[0]) {
-            targetTenantId = match[0].id;
+          console.log("User lookup result:", {
+            incomingEmail,
+            userId: user?.id,
+            dbEmail: user?.emailAddress,
+          });
+
+          if (!user) {
+            console.error(
+              `No user found for Gmail account: ${incomingEmail}`
+            );
+
+            return NextResponse.json(
+              {
+                success: false,
+                error: `No user found for ${incomingEmail}`,
+              },
+              { status: 404 }
+            );
           }
+
+          targetTenantId = user.id;
         }
       } catch (decodeError) {
-        console.error("Failed parsing tenant email from PubSub payload:", decodeError);
+        console.error(
+          "Failed parsing Gmail PubSub payload:",
+          decodeError
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid Gmail PubSub payload",
+          },
+          { status: 400 }
+        );
       }
     }
 
-    // Process webhook through Corsair
+    if (!targetTenantId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unable to resolve tenantId",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log("Processing webhook with tenant:", targetTenantId);
+
     const result = await processWebhook(corsair, headers, body, {
       tenantId: targetTenantId,
     });
 
-    console.log("Webhook processed");
+    console.log("Webhook processed successfully");
 
-    // Emit SSE "refresh" signal — triggers TanStack Query invalidation on frontend.
-    // We don't parse the webhook payload deeply. It's just a "something changed" ping.
     broadcastRefresh();
 
     const responseHeaders = (result as any).responseHeaders ?? {};
+
     const nextHeaders = new Headers();
+
     for (const [key, value] of Object.entries(responseHeaders)) {
       nextHeaders.set(key, String(value));
     }
 
     if (!result.response) {
       return NextResponse.json(
-        { success: false, message: "No matching webhook handler found" },
-        { status: 404, headers: nextHeaders },
+        {
+          success: false,
+          message: "No matching webhook handler found",
+        },
+        {
+          status: 404,
+          headers: nextHeaders,
+        }
       );
     }
 
@@ -80,9 +130,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Corsair webhook critical failure:", error);
+
     return NextResponse.json(
-      { success: false, error: "Webhook processing failed" },
-      { status: 500 },
+      {
+        success: false,
+        error: "Webhook processing failed",
+      },
+      { status: 500 }
     );
   }
 }

@@ -25,9 +25,18 @@ export async function GET(request: NextRequest) {
       redirectUri: REDIRECT_URI,
     });
 
+    const tenantId = result.tenantId;
+    const plugin = result.plugin;
+
+    console.log("tenantId: ",tenantId)
+
+    
+    
+    
+
     // Bounce the user back to the frontend
     const response = NextResponse.redirect(
-      new URL(`/dashboard?connected=${result.plugin}`, request.url)
+      new URL(`/email/inbox?connected=${plugin}`, request.url),
     );
     response.cookies.delete("oauth_state");
     return response;

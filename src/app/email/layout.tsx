@@ -25,8 +25,8 @@ export default function EmailLayout({
           <main className="flex-1 overflow-y-auto relative flex flex-col">
           {children}
          </main>
-        {/* Inject the FAB and Modal logic here */}
-        <ComposeFAB />
+        {/* Inject the FAB and Modal logic here
+        <ComposeFAB /> */}
         </>
     //   </div>
     //   <ToastContainer />

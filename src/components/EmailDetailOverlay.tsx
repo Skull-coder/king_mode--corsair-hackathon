@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ParsedEmail } from "@/lib/email-parser";
 import { useEffect, useRef, useState } from "react";
+import { EventModal } from "@/components/EventModal";
 
 function EmailHtmlFrame({ html }: { html: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -377,6 +378,7 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
 
   // collapse older messages by default, expand the last one
   const [expanded, setExpanded] = useState(isLast);
+  const [showEventModal, setShowEventModal] = useState(false);
 
   const displayPerson =
     context === "inbox"
@@ -464,6 +466,12 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
             </button>
             <div className="absolute right-0 mt-2 w-48 bg-[#1a1d27] border border-gray-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               <button
+                onClick={() => setShowEventModal(true)}
+                className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 rounded-t-xl border-b border-gray-700"
+              >
+                Create Event
+              </button>
+              <button
                 onClick={() =>
                   deleteEmail(email.id, {
                     onSuccess: () => {
@@ -472,7 +480,7 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
                     },
                   })
                 }
-                className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-gray-800 rounded-t-xl"
+                className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-gray-800"
               >
                 Delete Message
               </button>
@@ -521,6 +529,14 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
       {!expanded && (
         <p className="text-sm text-[#8b949e] truncate">{email.snippet}</p>
       )}
+
+      {/* Create Event Modal — prefilled with email subject */}
+      <EventModal
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        event={null}
+        defaultSummary={email.subject !== "(No Subject)" ? email.subject : ""}
+      />
     </div>
   );
 }

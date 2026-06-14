@@ -7,7 +7,7 @@ import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 }).primaryKey(), // Clerk user ID
-  emailAddress: varchar("email_address", { length: 255 }).notNull(),
+  emailAddress: varchar("email_address", { length: 255 }).notNull().unique(),
   corsairAccessToken: text("corsair_access_token"),
   corsairEntityId: varchar("corsair_entity_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
