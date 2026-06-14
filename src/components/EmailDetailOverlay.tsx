@@ -137,6 +137,8 @@ function getAvatarStyle(name: string) {
   return "bg-gray-800 text-gray-300 border-gray-700";
 }
 
+
+
 interface EmailDetailOverlayProps {
   threadId: string;
   context: "inbox" | "sent";
@@ -198,34 +200,45 @@ export function EmailDetailOverlay({
     setReplyBody("");
   };
 
-  const handleSend = () => {
-    if (!replyTo || !replyBody.trim()) return;
+  const handleSend = (): Promise<{ threadId: string; messageId: string }> => {
+    return new Promise((resolve, reject) => {
+      if (!replyTo || !replyBody.trim()) {
+        return reject(new Error("No reply"));
+      }
 
-    // extract email address from "Name <email@x.com>" format
-    const emailMatch = replyTo.from?.match(/<([^>]+)>/);
-    const toAddress = emailMatch ? emailMatch[1] : replyTo.from;
+      const emailMatch = replyTo.from?.match(/<([^>]+)>/);
+      const toAddress = emailMatch ? emailMatch[1] : replyTo.from;
 
-    // build References: existing references + this message's Message-ID
-    const existingRefs = replyTo.references ? `${replyTo.references} ` : "";
-    const references = `${existingRefs}${replyTo.messageIdHeader || ""}`.trim();
+      const existingRefs = replyTo.references ? `${replyTo.references} ` : "";
+      const references =
+        `${existingRefs}${replyTo.messageIdHeader || ""}`.trim();
 
-    sendEmail(
-      {
-        to: [toAddress],
-        subject: subject.startsWith("Re:") ? subject : `Re: ${subject}`,
-        body: replyBody,
-        threadId,
-        inReplyToMessageId: replyTo.messageIdHeader,
-        references,
-      },
-      {
-        onSuccess: () => {
-          addToast("success", "Reply sent");
-          closeReply();
+      sendEmail(
+        {
+          to: [toAddress],
+          subject: subject.startsWith("Re:") ? subject : `Re: ${subject}`,
+          body: replyBody,
+          threadId,
+          inReplyToMessageId: replyTo.messageIdHeader,
+          references,
         },
-        onError: () => addToast("error", "Failed to send reply"),
-      },
-    );
+        {
+          onSuccess: (result) => {
+            addToast("success", "Reply sent");
+            closeReply();
+            // Extract the threadId and messageId from the send result
+            resolve({
+              threadId: result.threadId ?? threadId,
+              messageId: result.id ?? "",
+            });
+          },
+          onError: (error) => {
+            addToast("error", "Failed to send reply");
+            reject(error);
+          },
+        },
+      );
+    });
   };
 
   return (
@@ -240,8 +253,18 @@ export function EmailDetailOverlay({
             {context}
           </Link>
           <span className="text-[#8b949e]">
-            <svg className="w-3 h-3 inline-block mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            <svg
+              className="w-3 h-3 inline-block mx-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
             Message
           </span>
@@ -272,6 +295,8 @@ export function EmailDetailOverlay({
             onSend={handleSend}
             onDiscard={closeReply}
             isSending={isSending}
+            threadId={threadId}
+            subject={subject}
           />
         )}
       </div>
@@ -281,36 +306,151 @@ export function EmailDetailOverlay({
 
 // ─── Reply Panel ────────────────────────────────────────────────────────────
 
+import { useCreateReminder } from "@/lib/hooks/use-reminders";
+
 interface ReplyPanelProps {
-  replyTo: ParsedEmail;
+  replyTo: { from: string };
   body: string;
-  onChangeBody: (val: string) => void;
-  onSend: () => void;
+  onChangeBody: (value: string) => void;
+  onSend: () => Promise<{ threadId: string; messageId: string }>;   // now returns IDs
   onDiscard: () => void;
   isSending: boolean;
+  threadId: string;
+  subject: string;
 }
 
-function ReplyPanel({ replyTo, body, onChangeBody, onSend, onDiscard, isSending }: ReplyPanelProps) {
+function ReminderDropdown({
+  selected,
+  onSelect,
+}: {
+  selected: string | null;
+  onSelect: (value: string) => void;
+}) {
+  const options = [
+    { label: "1 hour", value: "1h" },
+    { label: "4 hours", value: "4h" },
+    { label: "Tomorrow 9 AM", value: "tomorrow" },
+    { label: "Monday 9 AM", value: "monday" },
+    { label: "Custom…", value: "custom" },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onSelect(opt.value)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+            selected === opt.value
+              ? "bg-[#5c4dff] text-white border-[#5c4dff]"
+              : "bg-[#1a1d27] text-[#8b949e] border-gray-700 hover:border-gray-500 hover:text-gray-200"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReplyPanel({
+  replyTo,
+  body,
+  onChangeBody,
+  onSend,
+  onDiscard,
+  isSending,
+  threadId,
+  subject,
+}: ReplyPanelProps) {
+  const [showReminder, setShowReminder] = useState(false);
+  const [remindOption, setRemindOption] = useState<string | null>(null);
+  const [customDate, setCustomDate] = useState("");
+
+  const createReminder = useCreateReminder();
+
   const displayPerson = replyTo.from || "Unknown Sender";
   const nameMatch = displayPerson.match(/^([^<]+)/);
   const emailMatch = displayPerson.match(/<([^>]+)>/);
   const displayName = nameMatch ? nameMatch[1].trim() : displayPerson;
   const displayEmailAddress = emailMatch ? emailMatch[1].trim() : displayPerson;
 
+  // Derive the recipient email we're waiting for
+  const recipientEmail = displayEmailAddress;
+
+  const computeRemindAfter = (): Date | null => {
+    if (!remindOption) return null;
+    const now = new Date();
+    switch (remindOption) {
+      case "1h":
+        return new Date(now.getTime() + 60 * 60 * 1000);
+      case "4h":
+        return new Date(now.getTime() + 4 * 60 * 60 * 1000);
+      case "tomorrow":
+        now.setDate(now.getDate() + 1);
+        now.setHours(9, 0, 0, 0);
+        return now;
+      case "monday":
+        now.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7)); // next Monday
+        now.setHours(9, 0, 0, 0);
+        return now;
+      case "custom":
+        return customDate ? new Date(customDate) : null;
+      default:
+        return null;
+    }
+  };
+  const { addToast } = useToast();
+
+  const handleSend = async () => {
+  try {
+    const result = await onSend();   // { threadId, messageId }
+    if (remindOption) {
+      const remindAfter = computeRemindAfter();
+      if (remindAfter && result.threadId && result.messageId) {
+        createReminder.mutate({
+          threadId: result.threadId,
+          sentMessageId: result.messageId,
+          sentAt: new Date().toISOString(),
+          remindAfter: remindAfter.toISOString(),
+          recipientEmail,
+          subject: `Re: ${subject}`,
+        });
+      } else if (!result.threadId || !result.messageId) {
+        addToast("error", "Reply sent but reminder could not be created (missing identifiers)");
+      }
+    }
+  } catch (err) {
+    // onSend handles its own toasts; no additional action needed
+  }
+};
+
   return (
-    <div className="mt-4 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden">
+    <div className="mt-4 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800/80">
         <p className="text-sm font-semibold text-gray-200">
           Replying to {displayName}{" "}
-          <span className="text-[#8b949e] font-normal">&lt;{displayEmailAddress}&gt;</span>
+          <span className="text-[#8b949e] font-normal">
+            &lt;{displayEmailAddress}&gt;
+          </span>
         </p>
         <button
           onClick={onDiscard}
           className="text-[#8b949e] hover:text-gray-200 transition-colors p-1"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M20 12H4"
+            />
           </svg>
         </button>
       </div>
@@ -324,11 +464,48 @@ function ReplyPanel({ replyTo, body, onChangeBody, onSend, onDiscard, isSending 
         className="w-full bg-transparent px-6 py-4 text-sm text-gray-200 placeholder-gray-500 resize-none focus:outline-none"
       />
 
+      {/* Reminder collapsible section (slides between textarea and footer) */}
+      <div
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          showReminder ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="px-6 py-4 border-t border-gray-800/80 bg-[#11141c]">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-200">
+              ⏱ Remind me if no reply in…
+            </h4>
+            <button
+              onClick={() => {
+                setShowReminder(false);
+                setRemindOption(null);
+                setCustomDate("");
+              }}
+              className="text-xs text-[#8b949e] hover:text-gray-200"
+            >
+              Remove
+            </button>
+          </div>
+          <ReminderDropdown
+            selected={remindOption}
+            onSelect={setRemindOption}
+          />
+          {remindOption === "custom" && (
+            <input
+              type="datetime-local"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
+              className="mt-2 w-full bg-[#0e1116] text-gray-200 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#5c4dff]"
+            />
+          )}
+        </div>
+      </div>
+
       {/* Footer */}
       <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800/80">
         <div className="flex items-center gap-4">
           <button
-            onClick={onSend}
+            onClick={handleSend}
             disabled={isSending || !body.trim()}
             className="flex items-center gap-2 px-4 py-2 bg-[#5c4dff] hover:bg-[#4b3be0] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors"
           >
@@ -346,14 +523,62 @@ function ReplyPanel({ replyTo, body, onChangeBody, onSend, onDiscard, isSending 
         </div>
 
         <div className="flex items-center gap-2 text-[#8b949e]">
+          <button
+            onClick={() => setShowReminder(!showReminder)}
+            className={`flex items-center p-3 rounded-lg gap-2 transition-all ${
+              showReminder
+                ? "bg-[#5c4dff] text-white"
+                : "bg-transparent hover:text-gray-200 hover:bg-[#1a1d27]"
+            }`}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Add Reminder
+          </button>
+
+          {/* existing other buttons */}
           <button className="p-2 hover:text-gray-200 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+              />
             </svg>
           </button>
-          <button onClick={onDiscard} className="p-2 hover:text-red-400 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          <button
+            onClick={onDiscard}
+            className="p-2 hover:text-red-400 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         </div>
@@ -361,6 +586,8 @@ function ReplyPanel({ replyTo, body, onChangeBody, onSend, onDiscard, isSending 
     </div>
   );
 }
+
+export default ReplyPanel;
 
 interface MessageCardProps {
   email: ParsedEmail;
@@ -370,7 +597,13 @@ interface MessageCardProps {
   onReply: () => void;
 }
 
-function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCardProps) {
+function MessageCard({
+  email,
+  context,
+  isLast,
+  onDeleted,
+  onReply,
+}: MessageCardProps) {
   const { mutate: toggleStar } = useToggleStar();
   const { mutate: modifyEmail } = useModifyEmail();
   const { mutate: deleteEmail } = useDeleteEmail();
@@ -404,11 +637,16 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
           </div>
           <div className="flex flex-col">
             <span className="font-semibold text-gray-200">{displayName}</span>
-            <span className="text-sm text-[#8b949e]">{displayEmailAddress}</span>
+            <span className="text-sm text-[#8b949e]">
+              {displayEmailAddress}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-3"
+          onClick={(e) => e.stopPropagation()}
+        >
           <span className="text-[#8b949e] text-sm">
             {formatEmailDate(email.internalDate)}
           </span>
@@ -419,7 +657,10 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
                 { messageId: email.id, starred: !email.isStarred },
                 {
                   onSuccess: () =>
-                    addToast("success", email.isStarred ? "Unstarred" : "Starred"),
+                    addToast(
+                      "success",
+                      email.isStarred ? "Unstarred" : "Starred",
+                    ),
                 },
               )
             }
@@ -441,21 +682,41 @@ function MessageCard({ email, context, isLast, onDeleted, onReply }: MessageCard
           </button>
 
           <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onReply();
-    }}
-    className="p-2 rounded-full text-[#8b949e] hover:text-gray-200 hover:bg-gray-800 transition-colors"
-  >
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7L4 12L9 17" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12H15C18 12 20 14 20 17" />
-    </svg>
-  </button>
+            onClick={(e) => {
+              e.stopPropagation();
+              onReply();
+            }}
+            className="p-2 rounded-full text-[#8b949e] hover:text-gray-200 hover:bg-gray-800 transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 7L4 12L9 17"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 12H15C18 12 20 14 20 17"
+              />
+            </svg>
+          </button>
 
           <div className="relative group">
             <button className="p-2 rounded-full text-[#8b949e] hover:text-gray-200 hover:bg-gray-800 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

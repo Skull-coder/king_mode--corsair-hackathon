@@ -13,7 +13,6 @@ export async function POST(
     const { draftId } = await params;
 
     const result = await tenant.gmail.api.drafts.send({ id: draftId });
-
     return NextResponse.json(result);
   } catch (error: any) {
     if (error.message === "Unauthorized") {

@@ -27,6 +27,7 @@
     "@tanstack/react-query": "^5.101.0",
     "@vercel/functions": "^3.6.2",
     "corsair": "^0.1.74",
+    "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.7",
     "openai": "^6.42.0",

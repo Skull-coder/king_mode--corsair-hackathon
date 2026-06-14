@@ -3,16 +3,50 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/lib/hooks/useToast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCreateReminder } from "@/lib/hooks/use-reminders"; // ← new import
 
 interface ComposeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Prefill fields when editing an existing draft */
   initialTo?: string;
   initialSubject?: string;
   initialBody?: string;
-  /** If set, we're editing an existing draft. Used for update + send. */
   draftId?: string;
+}
+
+// ─── Reminder chip selector (same as everywhere) ───────────────────
+function ReminderDropdown({
+  selected,
+  onSelect,
+}: {
+  selected: string | null;
+  onSelect: (value: string) => void;
+}) {
+  const options = [
+    { label: "1 hour", value: "1h" },
+    { label: "4 hours", value: "4h" },
+    { label: "Tomorrow 9 AM", value: "tomorrow" },
+    { label: "Monday 9 AM", value: "monday" },
+    { label: "Custom…", value: "custom" },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onSelect(opt.value)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+            selected === opt.value
+              ? "bg-[#5c4dff] text-white border-[#5c4dff]"
+              : "bg-[#1a1d27] text-[#8b949e] border-gray-700 hover:border-gray-500 hover:text-gray-200"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function ComposeModal({
@@ -25,19 +59,53 @@ export function ComposeModal({
 }: ComposeModalProps) {
   const { addToast } = useToast();
   const qc = useQueryClient();
+  const createReminder = useCreateReminder(); // ← new hook
+
   const [to, setTo] = useState(initialTo);
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when modal opens with new data
+  // ─── Reminder state ──────────────────────────────────────────────
+  const [showReminder, setShowReminder] = useState(false);
+  const [remindOption, setRemindOption] = useState<string | null>(null);
+  const [customDate, setCustomDate] = useState("");
+
+  // Reset form when modal opens (including reminder)
   useEffect(() => {
     if (isOpen) {
       setTo(initialTo);
       setSubject(initialSubject);
       setBody(initialBody);
+      setShowReminder(false);
+      setRemindOption(null);
+      setCustomDate("");
     }
   }, [isOpen, initialTo, initialSubject, initialBody]);
+
+  // Calculate remindAfter from selection
+  const computeRemindAfter = (): Date | null => {
+    if (!remindOption) return null;
+    const now = new Date();
+    switch (remindOption) {
+      case "1h":
+        return new Date(now.getTime() + 60 * 60 * 1000);
+      case "4h":
+        return new Date(now.getTime() + 4 * 60 * 60 * 1000);
+      case "tomorrow":
+        now.setDate(now.getDate() + 1);
+        now.setHours(9, 0, 0, 0);
+        return now;
+      case "monday":
+        now.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7 || 7));
+        now.setHours(9, 0, 0, 0);
+        return now;
+      case "custom":
+        return customDate ? new Date(customDate) : null;
+      default:
+        return null;
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -50,7 +118,6 @@ export function ComposeModal({
     setIsSubmitting(true);
     try {
       if (draftId) {
-        // Update existing draft
         const res = await fetch(`/api/drafts/${draftId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -59,7 +126,6 @@ export function ComposeModal({
         if (!res.ok) throw new Error("Failed to update draft");
         addToast("success", "Draft updated");
       } else {
-        // Create new draft
         const res = await fetch("/api/drafts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -86,10 +152,16 @@ export function ComposeModal({
 
     setIsSubmitting(true);
     try {
+      let threadId = "";
+      let messageId = "";
+
       if (draftId) {
         // Send existing draft directly
         const sendRes = await fetch(`/api/drafts/${draftId}/send`, { method: "POST" });
         if (!sendRes.ok) throw new Error("Failed to send");
+        const sendData = await sendRes.json().catch(() => ({}));
+        threadId = sendData.threadId ?? "";
+        messageId = sendData.id ?? "";
       } else {
         // Create draft then send
         const draftRes = await fetch("/api/drafts", {
@@ -99,16 +171,36 @@ export function ComposeModal({
         });
         if (!draftRes.ok) throw new Error("Failed to prepare email");
         const draft = await draftRes.json();
+
         const sendRes = await fetch(`/api/drafts/${draft.id}/send`, { method: "POST" });
         if (!sendRes.ok) throw new Error("Failed to send email");
+        const sendData = await sendRes.json().catch(() => ({}));
+        threadId = sendData.threadId ?? "";
+        messageId = sendData.id ?? "";
+      }
+
+      // ─── Create reminder if configured ──────────────────────────
+      if (remindOption) {
+        const remindAfter = computeRemindAfter();
+        console.log("created reminder")
+        if (remindAfter) {
+          createReminder.mutate({
+            threadId,
+            sentMessageId: messageId,
+            sentAt: new Date().toISOString(),
+            remindAfter: remindAfter.toISOString(),
+            recipientEmail: to.trim(),   // primary recipient
+            subject: subject || "(No subject)",
+          });
+        }
       }
 
       addToast("success", "Email sent!");
       qc.invalidateQueries({ queryKey: ["drafts"] });
       qc.invalidateQueries({ queryKey: ["emails"] });
       onClose();
-    } catch {
-      addToast("error", "Failed to send email");
+    } catch (err: any) {
+      addToast("error", err.message || "Failed to send email");
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +281,40 @@ export function ComposeModal({
               className="w-full h-48 bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] transition-colors resize-none"
             />
           </div>
+
+          {/* ─── Reminder collapsible section ───────────────────── */}
+          <div
+            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              showReminder ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="border border-gray-800 rounded-lg bg-[#11141c] p-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-200">
+                  ⏱ Remind me if no reply in…
+                </h4>
+                <button
+                  onClick={() => {
+                    setShowReminder(false);
+                    setRemindOption(null);
+                    setCustomDate("");
+                  }}
+                  className="text-xs text-[#8b949e] hover:text-gray-200"
+                >
+                  Remove
+                </button>
+              </div>
+              <ReminderDropdown selected={remindOption} onSelect={setRemindOption} />
+              {remindOption === "custom" && (
+                <input
+                  type="datetime-local"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)}
+                  className="mt-2 w-full bg-[#0e1116] text-gray-200 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#5c4dff]"
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Footer Actions */}
@@ -204,16 +330,34 @@ export function ComposeModal({
             Save as draft
           </button>
           
-          <button
-            onClick={handleSend}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-8 py-2.5 text-sm font-medium text-white bg-[#5c4dff] rounded-lg hover:bg-[#4b3be0] transition-colors shadow-lg shadow-[#5c4dff]/20 disabled:opacity-50"
-          >
-            <svg className="w-4 h-4 transform -rotate-45 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-            Send
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Reminder toggle button */}
+            <button
+              onClick={() => setShowReminder(!showReminder)}
+              className={`flex items-center px-3 py-2 rounded-lg gap-2 transition-all text-sm ${
+                showReminder
+                  ? "bg-[#5c4dff] text-white"
+                  : "text-[#8b949e] hover:text-gray-200 hover:bg-[#1a1d27]"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {showReminder ? "Reminder On" : "Add Reminder"}
+            </button>
+            
+            {/* Send button */}
+            <button
+              onClick={handleSend}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-8 py-2.5 text-sm font-medium text-white bg-[#5c4dff] rounded-lg hover:bg-[#4b3be0] transition-colors shadow-lg shadow-[#5c4dff]/20 disabled:opacity-50"
+            >
+              <svg className="w-4 h-4 transform -rotate-45 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              Send
+            </button>
+          </div>
         </div>
 
       </div>
