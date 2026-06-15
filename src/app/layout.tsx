@@ -7,6 +7,7 @@ import { ToastProvider } from "@/lib/hooks/useToast";
 import { Sidebar } from "@/components/Sidebar";
 import { ComposeFAB } from "@/components/ComposeFAB";
 import { ToastContainer } from "@/components/Toast";
+import { GlobalShortcutsProvider } from "@/components/GlobalShortcutsProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
                     <Sidebar />
                     
                     <main className="flex-1 overflow-y-auto relative flex flex-col">
+                       <GlobalShortcutsProvider />
                       {children}
                     </main>
             

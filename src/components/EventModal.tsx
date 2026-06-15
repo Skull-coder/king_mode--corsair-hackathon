@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import type { CalendarEvent } from "@/lib/hooks/useCalendar";
 import { useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/lib/hooks/useCalendar";
 import { useToast } from "@/lib/hooks/useToast";
@@ -8,13 +9,10 @@ import { useToast } from "@/lib/hooks/useToast";
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Existing event for edit mode, null for create */
   event: CalendarEvent | null;
-  /** Prefilled date range from slot selection */
   defaultStart?: Date;
   defaultEnd?: Date;
   defaultAllDay?: boolean;
-  /** Prefilled summary (e.g. from email subject) */
   defaultSummary?: string;
 }
 
@@ -48,6 +46,7 @@ export function EventModal({
   const isPending = isCreating || isUpdating || isDeleting;
   const isEdit = !!event;
 
+  // Form state
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -61,6 +60,11 @@ export function EventModal({
   const [transparency, setTransparency] = useState("opaque");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [newAttendeeEmail, setNewAttendeeEmail] = useState("");
+
+  // Refs for focus management
+  const titleRef = useRef<HTMLInputElement>(null);
+  const locationRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -101,7 +105,26 @@ export function EventModal({
       setAttendees([]);
     }
     setNewAttendeeEmail("");
+  }, [isOpen, event, defaultStart, defaultEnd, defaultAllDay, defaultSummary]);
+
+  // Auto‑focus title when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => titleRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
+
+  // ─── Keyboard shortcuts ──────────────────────────────────────
+  // Close on Escape
+  useHotkeys("escape", onClose, { enabled: isOpen });
+
+  // Save on Ctrl+Enter (works even in form fields)
+  useHotkeys(
+    "ctrl+enter",
+    () => handleSave(),
+    { enabled: isOpen, enableOnFormTags: true }
+  );
 
   const buildPayload = (): CalendarEvent => {
     const start = allDay
@@ -187,9 +210,16 @@ export function EventModal({
           {/* Title */}
           <div>
             <input
+              ref={titleRef}
               type="text"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  locationRef.current?.focus();
+                }
+              }}
               placeholder="Add title"
               className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
             />
@@ -248,9 +278,19 @@ export function EventModal({
           {/* Location */}
           <div>
             <input
+              ref={locationRef}
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  descriptionRef.current?.focus();
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  titleRef.current?.focus();
+                }
+              }}
               placeholder="Add location"
               className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
             />
@@ -259,8 +299,15 @@ export function EventModal({
           {/* Description */}
           <div>
             <textarea
+              ref={descriptionRef}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  locationRef.current?.focus();
+                }
+              }}
               placeholder="Add description"
               rows={3}
               className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm resize-none"

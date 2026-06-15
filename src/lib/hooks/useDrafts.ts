@@ -22,7 +22,7 @@ export function useDrafts() {
       fetchJSON(`${API}${pageParam ? `?pageToken=${pageParam}` : ""}`),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextPageToken ?? undefined,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 }
 

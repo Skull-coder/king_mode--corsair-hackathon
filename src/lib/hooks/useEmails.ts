@@ -27,7 +27,7 @@ export function useEmails(label: "INBOX" | "DRAFT" | "SENT") {
       fetchJSON(`${API}?label=${label}${pageParam ? `&pageToken=${pageParam}` : ""}`),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextPageToken ?? undefined,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 }
 

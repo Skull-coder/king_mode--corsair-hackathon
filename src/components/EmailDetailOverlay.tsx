@@ -307,6 +307,7 @@ export function EmailDetailOverlay({
 // ─── Reply Panel ────────────────────────────────────────────────────────────
 
 import { useCreateReminder } from "@/lib/hooks/use-reminders";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface ReplyPanelProps {
   replyTo: { from: string };
@@ -424,6 +425,11 @@ function ReplyPanel({
     // onSend handles its own toasts; no additional action needed
   }
 };
+
+  useHotkeys("ctrl+enter", handleSend, {
+    enabled: true,
+    enableOnFormTags: true,
+  });
 
   return (
     <div className="mt-4 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden transition-all duration-300">

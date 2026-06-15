@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useToast } from "@/lib/hooks/useToast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateEvent } from "@/lib/hooks/useCalendar";
-import { useCreateReminder } from "@/lib/hooks/use-reminders"; // ← new import
+import { useCreateReminder } from "@/lib/hooks/use-reminders";
+import { useHotkeys } from "react-hotkeys-hook";
 
 type Tab = "draft" | "event";
 
@@ -62,14 +63,33 @@ export function QuickCreateModal({
   const { addToast } = useToast();
   const qc = useQueryClient();
 
+  const toRef = useRef<HTMLInputElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const evSummaryRef = useRef<HTMLInputElement>(null);
+  const evLocationRef = useRef<HTMLInputElement>(null);
+  const evDescriptionRef = useRef<HTMLTextAreaElement>(null);
+
   // Determine default tab from route
   const defaultTab: Tab = pathname.startsWith("/calendar") ? "event" : "draft";
   const [tab, setTab] = useState<Tab>(defaultTab);
 
-  // Reset tab when opening
+  // Auto‑focus the "To" field whenever the Draft tab is active and modal is open
   useEffect(() => {
-    if (isOpen) setTab(defaultTab);
-  }, [isOpen, defaultTab]);
+    if (isOpen && tab === "draft") {
+      const timer = setTimeout(() => toRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, tab]);
+
+  // Auto‑focus the Event title field when Event tab is active and modal is open
+  useEffect(() => {
+    if (isOpen && tab === "event") {
+      const timer = setTimeout(() => evSummaryRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, tab]);
 
   // ─── Draft form state ────────────────────────────────────────────────────
   const [to, setTo] = useState("");
@@ -91,7 +111,7 @@ export function QuickCreateModal({
   const [evStartTime, setEvStartTime] = useState(toTimeStr(new Date()));
   const [evEndDate, setEvEndDate] = useState(toDateStr(new Date()));
   const [evEndTime, setEvEndTime] = useState(
-    toTimeStr(new Date(Date.now() + 3600000))
+    toTimeStr(new Date(Date.now() + 3600000)),
   );
   const [evLocation, setEvLocation] = useState("");
   const [evDescription, setEvDescription] = useState("");
@@ -200,7 +220,7 @@ export function QuickCreateModal({
             sentMessageId: sendResult.messageId ?? "",
             sentAt: new Date().toISOString(),
             remindAfter: remindAfter.toISOString(),
-            recipientEmail: to.trim(),  // primary recipient
+            recipientEmail: to.trim(), // primary recipient
             subject: subject || "(No subject)",
           });
         }
@@ -246,15 +266,28 @@ export function QuickCreateModal({
           onClose();
         },
         onError: () => addToast("error", "Failed to create event"),
-      }
+      },
     );
   };
+  useHotkeys(
+    "ctrl+enter",
+    () => {
+      if (tab === "event") handleCreateEvent();
+      else if (tab === "draft") handleSendDraft();
+    },
+    { enabled: isOpen, enableOnFormTags: true },
+  );
+  useHotkeys("right", () => setTab("event"), { enabled: isOpen });
+  useHotkeys("left", () => setTab("draft"), { enabled: isOpen });
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-[#0e1116]/60 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-[#0e1116]/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
       <div className="relative w-full max-w-lg bg-[#151821] border border-gray-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-up">
         {/* Header + Tabs */}
@@ -281,7 +314,10 @@ export function QuickCreateModal({
               Event
             </button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl leading-none">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-xl leading-none"
+          >
             &times;
           </button>
         </div>
@@ -291,22 +327,49 @@ export function QuickCreateModal({
           <>
             <div className="p-5 space-y-4">
               <input
+                ref={toRef}
                 type="text"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    subjectRef.current?.focus();
+                  }
+                }}
                 placeholder="To: recipient@email.com"
                 className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
               />
+
               <input
+                ref={subjectRef}
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    bodyRef.current?.focus();
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    toRef.current?.focus();
+                  }
+                }}
                 placeholder="Subject"
                 className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
               />
+
               <textarea
+                ref={bodyRef}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    subjectRef.current?.focus();
+                  }
+                  // ArrowDown stays natural (scrolls / moves cursor)
+                }}
                 placeholder="Write your message..."
                 rows={6}
                 className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm resize-none"
@@ -334,7 +397,10 @@ export function QuickCreateModal({
                       Remove
                     </button>
                   </div>
-                  <ReminderDropdown selected={remindOption} onSelect={setRemindOption} />
+                  <ReminderDropdown
+                    selected={remindOption}
+                    onSelect={setRemindOption}
+                  />
                   {remindOption === "custom" && (
                     <input
                       type="datetime-local"
@@ -374,8 +440,18 @@ export function QuickCreateModal({
                       : "text-[#8b949e] hover:text-gray-200 hover:bg-[#1a1d27]"
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   {showReminder ? "Reminder On" : "Add Reminder"}
                 </button>
@@ -384,7 +460,11 @@ export function QuickCreateModal({
                   disabled={isSubmitting}
                   className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#5c4dff] rounded-lg hover:bg-[#4b3be0] transition-colors disabled:opacity-50 shadow-lg shadow-[#5c4dff]/20"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                   </svg>
                   {isSubmitting ? "Sending..." : "Send"}
@@ -394,53 +474,115 @@ export function QuickCreateModal({
           </>
         )}
 
-        {/* ── Event Form (unchanged) ──────────────────────────────────────── */}
+        {/* ── Event Form (keyboard‑friendly) ────────────────────────── */}
         {tab === "event" && (
           <>
-            {/* ...event form remains exactly as before... */}
-            {/* (same as original, no changes) */}
-            {/* For brevity I include the full original event form below, though unchanged */}
             <div className="p-5 space-y-4">
+              {/* Title */}
               <input
-                type="text" value={evSummary} onChange={(e) => setEvSummary(e.target.value)}
+                ref={evSummaryRef}
+                type="text"
+                value={evSummary}
+                onChange={(e) => setEvSummary(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    evLocationRef.current?.focus();
+                  }
+                }}
                 placeholder="Event title"
                 className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
               />
 
+              {/* All‑day checkbox */}
               <label className="flex items-center gap-2 text-sm text-[#8b949e] cursor-pointer">
-                <input type="checkbox" checked={evAllDay} onChange={(e) => setEvAllDay(e.target.checked)} className="accent-[#5c4dff]" />
+                <input
+                  type="checkbox"
+                  checked={evAllDay}
+                  onChange={(e) => setEvAllDay(e.target.checked)}
+                  className="accent-[#5c4dff]"
+                />
                 All day
               </label>
 
+              {/* Start / End dates (unchanged) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-[#8b949e] mb-1">Start</label>
-                  <input type="date" value={evStartDate} onChange={(e) => setEvStartDate(e.target.value)}
-                    className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#5c4dff]" />
+                  <label className="block text-xs text-[#8b949e] mb-1">
+                    Start
+                  </label>
+                  <input
+                    type="date"
+                    value={evStartDate}
+                    onChange={(e) => setEvStartDate(e.target.value)}
+                    className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#5c4dff]"
+                  />
                   {!evAllDay && (
-                    <input type="time" value={evStartTime} onChange={(e) => setEvStartTime(e.target.value)}
-                      className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm mt-1 focus:outline-none focus:border-[#5c4dff]" />
+                    <input
+                      type="time"
+                      value={evStartTime}
+                      onChange={(e) => setEvStartTime(e.target.value)}
+                      className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm mt-1 focus:outline-none focus:border-[#5c4dff]"
+                    />
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs text-[#8b949e] mb-1">End</label>
-                  <input type="date" value={evEndDate} onChange={(e) => setEvEndDate(e.target.value)}
-                    className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#5c4dff]" />
+                  <label className="block text-xs text-[#8b949e] mb-1">
+                    End
+                  </label>
+                  <input
+                    type="date"
+                    value={evEndDate}
+                    onChange={(e) => setEvEndDate(e.target.value)}
+                    className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#5c4dff]"
+                  />
                   {!evAllDay && (
-                    <input type="time" value={evEndTime} onChange={(e) => setEvEndTime(e.target.value)}
-                      className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm mt-1 focus:outline-none focus:border-[#5c4dff]" />
+                    <input
+                      type="time"
+                      value={evEndTime}
+                      onChange={(e) => setEvEndTime(e.target.value)}
+                      className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm mt-1 focus:outline-none focus:border-[#5c4dff]"
+                    />
                   )}
                 </div>
               </div>
 
-              <input type="text" value={evLocation} onChange={(e) => setEvLocation(e.target.value)}
+              {/* Location */}
+              <input
+                ref={evLocationRef}
+                type="text"
+                value={evLocation}
+                onChange={(e) => setEvLocation(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    evDescriptionRef.current?.focus();
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    evSummaryRef.current?.focus();
+                  }
+                }}
                 placeholder="Add location"
-                className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm" />
+                className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm"
+              />
 
-              <textarea value={evDescription} onChange={(e) => setEvDescription(e.target.value)}
-                placeholder="Add description" rows={3}
-                className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm resize-none" />
+              {/* Description */}
+              <textarea
+                ref={evDescriptionRef}
+                value={evDescription}
+                onChange={(e) => setEvDescription(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    evLocationRef.current?.focus();
+                  }
+                }}
+                placeholder="Add description"
+                rows={3}
+                className="w-full bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] text-sm resize-none"
+              />
             </div>
+
             <div className="flex justify-end p-5 border-t border-gray-800">
               <button
                 onClick={handleCreateEvent}
