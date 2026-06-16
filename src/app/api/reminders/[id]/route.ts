@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { reminders } from "@/lib/db/schema/users";
 import { eq, and } from "drizzle-orm";
-import { getCorsairTenant } from "@/lib/corsair-client";
+import { getCorsairTenant } from "@/lib/corsair";
 
 export async function PATCH(
   request: NextRequest,

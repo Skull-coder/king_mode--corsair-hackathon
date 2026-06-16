@@ -1,5 +1,5 @@
 "use client";
-import { formatEmailDate } from "@/lib/email-parser";
+import { formatEmailDate } from "@/lib/email";
 import {
   useEmail,
   useToggleStar,
@@ -12,7 +12,7 @@ import { useToast } from "@/lib/hooks/useToast";
 import { EmailDetailSkeleton } from "@/components/LoadingSkeleton";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { ParsedEmail } from "@/lib/email-parser";
+import type { ParsedEmail } from "@/lib/email";
 import { useEffect, useRef, useState } from "react";
 import { EventModal } from "@/components/EventModal";
 

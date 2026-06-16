@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCorsairTenant } from "@/lib/corsair-client";
+import { getCorsairTenant } from "@/lib/corsair";
 
 /**
  * PATCH /api/emails/star

@@ -7,7 +7,7 @@ import { EmailList } from "@/components/EmailList";
 import { EmailListSkeleton } from "@/components/LoadingSkeleton";
 import { ComposeModal } from "@/components/ComposeModal";
 import Link from "next/link";
-import type { ParsedEmail } from "@/lib/email-parser";
+import type { ParsedEmail } from "@/lib/email";
 
 export default function DraftsPage() {
   useSSE();

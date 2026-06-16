@@ -342,6 +342,7 @@ export function QuickCreateModal({
     },
     { enabled: isOpen, enableOnFormTags: true },
   );
+  useHotkeys("escape", onClose, { enabled: isOpen });
   useHotkeys("right", () => setTab("event"), { enabled: isOpen });
   useHotkeys("left", () => setTab("draft"), { enabled: isOpen });
 

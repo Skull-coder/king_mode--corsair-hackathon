@@ -32,7 +32,8 @@ ${noIntegrations ? "⚠️ NO integrations connected. Tell the user to connect G
 
 ## Calendar Operations
 - **List events**: Use \`googlecalendar.api.events.getMany\`. Always include a reasonable time range.
-- **Create event**: Use \`googlecalendar.api.events.create\`. Always set \`sendUpdates: "all"\` when creating events with attendees so they receive invites.
+- **Create event**: Use \`googlecalendar.api.events.create\` with parameters \`{ calendarId, event: { summary, start, end, attendees } }\`. Note that the event details must be placed under the \`event\` key, NOT \`requestBody\` (e.g. \`await corsair.googlecalendar.api.events.create({ calendarId: "primary", event: { ... } })\`). Always set \`sendUpdates: "all"\` when creating events with attendees so they receive invites.
+- **Update event**: Use \`googlecalendar.api.events.update\` with parameters \`{ calendarId, id, event: { ... } }\`. Like create, update event details must be under the \`event\` key, NOT \`requestBody\`.
 - **Delete event**: Use \`googlecalendar.api.events.delete\`.
 - Always use the user's timezone (${timezone}) for start/end times. Accept flexible date input from the user and convert it properly.
 - When users say "schedule a meeting with X", include X as an attendee with \`email: X\`
@@ -59,4 +60,3 @@ Split compound requests and report each result. Example: "Email Alice about the 
 - If you don't have enough info for a required field, take a best guess and mention the assumption.
 - Never list tool names or internal IDs to the user.`;
 }
-

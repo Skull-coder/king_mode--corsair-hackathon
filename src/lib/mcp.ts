@@ -4,9 +4,9 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { corsair } from "@/../corsair"
-import  {ensureCorsairTenant}  from "@/lib/ensureCorsairTenant"
+import  {ensureCorsairTenant}  from "@/lib/corsair"
 
-import { sendGmailPlainViaCorsair } from "./gmail-send-plain"
+import { sendGmailPlainViaCorsair } from "./email/send-plain"
 
 // Asia/Kolkata is UTC+05:30
 const TIMEZONE_OFFSETS: Record<string, string> = {

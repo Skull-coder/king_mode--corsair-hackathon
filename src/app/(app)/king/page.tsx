@@ -49,6 +49,28 @@ export default function KingChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [modalProvider, setModalProvider] = useState("openrouter");
+  const [modalApiKey, setModalApiKey] = useState("");
+  const [modalModelName, setModalModelName] = useState("google/gemma-4-31b-it:free");
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedKey = localStorage.getItem("king_api_key");
+      const savedProvider = localStorage.getItem("king_provider");
+      const savedModel = localStorage.getItem("king_model_name");
+
+      if (!savedKey) {
+        setShowApiKeyModal(true);
+      } else {
+        if (savedProvider) setModalProvider(savedProvider);
+        if (savedKey) setModalApiKey(savedKey);
+        if (savedModel) setModalModelName(savedModel);
+      }
+    }
+  }, []);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,6 +92,15 @@ export default function KingChatPage() {
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
+
+    const savedKey = localStorage.getItem("king_api_key");
+    if (!savedKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    const savedProvider = localStorage.getItem("king_provider") || "openrouter";
+    const savedModel = localStorage.getItem("king_model_name") || "google/gemma-4-31b-it:free";
 
     setInput("");
     if (textareaRef.current) {
@@ -110,6 +141,9 @@ export default function KingChatPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-api-key": savedKey,
+          "x-provider": savedProvider,
+          "x-model-name": savedModel,
         },
         credentials: "include",
         body: JSON.stringify({ messages: requestMessages }),
@@ -263,6 +297,25 @@ export default function KingChatPage() {
       {/* Dynamic Main Content Area */}
       <main className="flex-1 overflow-hidden relative flex flex-col w-full max-w-4xl mx-auto">
         
+        {/* Floating Configuration Button */}
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={() => {
+              const savedKey = localStorage.getItem("king_api_key") || "";
+              const savedProvider = localStorage.getItem("king_provider") || "openrouter";
+              const savedModel = localStorage.getItem("king_model_name") || "google/gemma-4-31b-it:free";
+              setModalApiKey(savedKey);
+              setModalProvider(savedProvider);
+              setModalModelName(savedModel);
+              setShowApiKeyModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1c212b] border border-gray-800 hover:border-gray-700 text-xs text-gray-300 hover:text-white rounded-lg transition-colors shadow-md"
+          >
+            <span>🔑</span>
+            <span>Configure AI Key</span>
+          </button>
+        </div>
+        
         {messages.length === 0 ? (
           // --- EMPTY STATE (Centered) ---
           <div className="flex-1 flex flex-col items-center justify-center p-6 w-full animate-in fade-in duration-500">
@@ -367,6 +420,97 @@ export default function KingChatPage() {
           </>
         )}
       </main>
+
+      {/* API Key Modal Popup */}
+      {showApiKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1116]/80 backdrop-blur-sm animate-fade-in">
+          <div 
+            className="absolute inset-0" 
+            onClick={() => {
+              if (typeof window !== "undefined" && localStorage.getItem("king_api_key")) {
+                setShowApiKeyModal(false);
+              }
+            }} 
+          />
+          <div className="relative w-full max-w-md bg-[#151821] border border-gray-800 rounded-2xl shadow-2xl p-6 animate-scale-up z-30">
+            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+              Configure AI API Key
+            </h3>
+            <p className="text-xs text-[#8b949e] mb-6">
+              Enter your API key to run King Mode. Keys are saved strictly in your browser's local storage.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5">API Provider</label>
+                <select
+                  value={modalProvider}
+                  onChange={(e) => {
+                    const newProvider = e.target.value;
+                    setModalProvider(newProvider);
+                    if (newProvider === "openai") setModalModelName("gpt-4o-mini");
+                    else if (newProvider === "gemini") setModalModelName("gemini-1.5-flash");
+                    else if (newProvider === "openrouter") setModalModelName("google/gemma-4-31b-it:free");
+                  }}
+                  className="w-full px-3 py-2 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini (API Studio)</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5">API Key</label>
+                <input
+                  type="password"
+                  value={modalApiKey}
+                  onChange={(e) => setModalApiKey(e.target.value)}
+                  placeholder="Enter API Key"
+                  className="w-full px-3 py-2 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5">Model Name</label>
+                <input
+                  type="text"
+                  value={modalModelName}
+                  onChange={(e) => setModalModelName(e.target.value)}
+                  placeholder="e.g. gpt-4o, gemini-1.5-pro, google/gemma-4-31b-it:free"
+                  className="w-full px-3 py-2 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    if (!modalApiKey.trim()) {
+                      alert("API key is required to use King Mode.");
+                      return;
+                    }
+                    localStorage.setItem("king_api_key", modalApiKey.trim());
+                    localStorage.setItem("king_provider", modalProvider);
+                    localStorage.setItem("king_model_name", modalModelName.trim());
+                    setShowApiKeyModal(false);
+                  }}
+                  className="flex-1 py-2.5 bg-[#5c4dff] hover:bg-[#4b3ce6] text-white text-sm font-semibold rounded-xl transition-colors"
+                >
+                  Save Configuration
+                </button>
+                {typeof window !== "undefined" && localStorage.getItem("king_api_key") && (
+                  <button
+                    onClick={() => setShowApiKeyModal(false)}
+                    className="px-4 py-2.5 bg-transparent border border-gray-800 hover:bg-gray-800/50 text-[#8b949e] hover:text-white text-sm font-semibold rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

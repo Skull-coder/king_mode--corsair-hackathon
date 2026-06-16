@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCorsairTenant } from "@/lib/corsair-client";
-import { parseEmail } from "@/lib/email-parser";
+import { getCorsairTenant } from "@/lib/corsair";
+import { parseEmail } from "@/lib/email";
 
 /**
  * GET /api/threads/:threadId → fetch full thread with all messages parsed

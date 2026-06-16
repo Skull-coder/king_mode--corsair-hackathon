@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { hasPlugin } from "@/lib/hasPlugin";
+import { hasPlugin } from "@/lib/corsair";
 import { ConnectGmailScreen } from "@/components/ConnectGmailScreen";
 
 export const metadata: Metadata = {

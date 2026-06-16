@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCorsairTenant } from "@/lib/corsair-client";
-import { parseEmail } from "@/lib/email-parser";
-import { normalizeRecipients } from "@/lib/normalize-recipients";
+import { getCorsairTenant } from "@/lib/corsair";
+import { parseEmail } from "@/lib/email";
+import { normalizeRecipients } from "@/lib/email";
 
 /**
  * GET  /api/drafts              → list drafts with pagination

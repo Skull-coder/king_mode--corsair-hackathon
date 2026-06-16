@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { hasPlugin } from "@/lib/hasPlugin";
+import { hasPlugin } from "@/lib/corsair";
 import { ConnectCalendarScreen } from "@/components/ConnectCalendarScreen";
 
 export default async function CalendarLayout({

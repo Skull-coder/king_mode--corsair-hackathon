@@ -1,8 +1,3 @@
-/**
- * Parses raw Gmail API message objects into a structured, nullable-safe Email type.
- * Works with both messages.list responses (minimal data) and messages.get responses (full data).
- */
-
 export interface ParsedEmail {
   id: string;
   threadId: string;
@@ -11,7 +6,7 @@ export interface ParsedEmail {
   internalDate: string;
   sizeEstimate: number;
 
-  // Parsed from headers (may be null in list responses without metadata)
+  // Parsed from headers
   subject: string;
   from: string;
   to: string;
@@ -19,7 +14,7 @@ export interface ParsedEmail {
   bcc: string;
   date: string;
 
-  // Body (only available with format: "full")
+  // Body
   textBody: string | null;
   htmlBody: string | null;
 
@@ -31,13 +26,13 @@ export interface ParsedEmail {
   isInbox: boolean;
   isImportant: boolean;
 
-  messageIdHeader: string,
-  references: string,
+  messageIdHeader: string;
+  references: string;
 
-  // Draft ID — only set when coming from drafts.list
+  // Draft ID
   draftId?: string;
 
-  // Raw — for debugging
+  // Raw
   _raw: unknown;
 }
 
@@ -112,7 +107,6 @@ export function parseEmail(raw: any): ParsedEmail {
   };
 }
 
-/** Format a date string or timestamp for display */
 export function formatEmailDate(internalDate: string | number, isDraft?: boolean): string {
   const date = new Date(typeof internalDate === "string" ? parseInt(internalDate) : internalDate);
   if (isNaN(date.getTime())) return "";
@@ -130,7 +124,6 @@ export function formatEmailDate(internalDate: string | number, isDraft?: boolean
   return date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** For drafts, show "Edited" instead of just the date */
 export function formatDraftDate(internalDate: string | number): string {
   const formatted = formatEmailDate(internalDate);
   return formatted ? `Edited ${formatted}` : "";

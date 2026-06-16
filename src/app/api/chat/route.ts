@@ -6,20 +6,13 @@ import { streamText, stepCountIs } from "ai"
 import { auth } from "@clerk/nextjs/server"
 import { buildKingSystemPrompt } from "@/lib/ai"
 import { getUserLocale } from "@/lib/locale"
-import { hasPlugin } from "@/lib/hasPlugin";
+import { hasPlugin } from "@/lib/corsair";
 
 export const maxDuration = 60;
 
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
-  fetch: async (url, init) => {
-    console.log(">>> AI REQUEST URL:", url);
-    console.log(">>> AI REQUEST BODY:", init?.body);
-    const response = await fetch(url, init);
-    console.log(">>> AI RESPONSE STATUS:", response.status);
-    return response;
-  }
 });
 
 // What the frontend actually sends
@@ -47,6 +40,29 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  const apiKey = req.headers.get("x-api-key");
+  const provider = req.headers.get("x-provider") || "openrouter";
+  const modelName = req.headers.get("x-model-name") || "google/gemma-4-31b-it:free";
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "API Key is missing. Please configure it in your Settings or Key Modal." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  let baseUrl = "https://api.openai.com/v1";
+  if (provider === "openrouter") {
+    baseUrl = "https://openrouter.ai/api/v1";
+  } else if (provider === "gemini") {
+    baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai";
+  }
+
+  const customOpenAI = createOpenAI({
+    baseURL: baseUrl,
+    apiKey: apiKey,
+  });
 
   const { messages: rawMessages } = body;
 
@@ -110,14 +126,8 @@ export async function POST(req: Request) {
       ? `${buildKingSystemPrompt({ gmailConnected, calendarConnected, timezone: locale.timezone, country: locale.country })}\n\n${mcpClient.instructions}`
       : buildKingSystemPrompt({ gmailConnected, calendarConnected, timezone: locale.timezone, country: locale.country });
 
-    console.log(">>> MODEL DETAILS:", {
-      modelId: openrouter.chat("google/gemma-4-31b-it:free").modelId,
-      constructorName: (openrouter.chat("google/gemma-4-31b-it:free") as any).constructor.name,
-      provider: openrouter.chat("google/gemma-4-31b-it:free").provider,
-    });
-
     const result = streamText({
-      model: openrouter.chat("google/gemma-4-31b-it:free"),
+      model: customOpenAI.chat(modelName),
       system,
       messages: coreMessages,
       tools,

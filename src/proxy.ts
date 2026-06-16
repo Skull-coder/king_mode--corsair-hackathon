@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 // 1. Define routes that do NOT require authentication
 const isPublicRoute = createRouteMatcher([
+  '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)', // CRITICAL: This allows Clerk and Corsair servers to talk to your API

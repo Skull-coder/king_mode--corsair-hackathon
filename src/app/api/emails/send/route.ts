@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCorsairTenant } from "@/lib/corsair-client";
-import { normalizeRecipients } from "@/lib/normalize-recipients";
+import { getCorsairTenant } from "@/lib/corsair";
+import { normalizeRecipients } from "@/lib/email";
 
 /**
  * POST /api/emails/send

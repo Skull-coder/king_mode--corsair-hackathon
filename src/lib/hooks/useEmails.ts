@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ParsedEmail } from "@/lib/email-parser";
+import type { ParsedEmail } from "@/lib/email";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 "use client";
 
-import type { ParsedEmail } from "@/lib/email-parser";
-import { formatEmailDate } from "@/lib/email-parser";
+import type { ParsedEmail } from "@/lib/email";
+import { formatEmailDate } from "@/lib/email";
 import Link from "next/link";
 
 /**
