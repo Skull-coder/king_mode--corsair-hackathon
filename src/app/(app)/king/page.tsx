@@ -57,18 +57,16 @@ export default function KingChatPage() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedKey = localStorage.getItem("king_api_key");
-      const savedProvider = localStorage.getItem("king_provider");
-      const savedModel = localStorage.getItem("king_model_name");
+    const savedKey = localStorage.getItem("king_api_key");
+    const savedProvider = localStorage.getItem("king_provider");
+    const savedModel = localStorage.getItem("king_model_name");
 
-      if (!savedKey) {
-        setShowApiKeyModal(true);
-      } else {
-        if (savedProvider) setModalProvider(savedProvider);
-        if (savedKey) setModalApiKey(savedKey);
-        if (savedModel) setModalModelName(savedModel);
-      }
+    if (!savedKey) {
+      setShowApiKeyModal(true);
+    } else {
+      if (savedProvider) setModalProvider(savedProvider);
+      setModalApiKey(savedKey);
+      if (savedModel) setModalModelName(savedModel);
     }
   }, []);
   
@@ -144,6 +142,8 @@ export default function KingChatPage() {
           "x-api-key": savedKey,
           "x-provider": savedProvider,
           "x-model-name": savedModel,
+          // Send the browser's real IANA timezone so the AI uses correct local time
+          "x-timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         credentials: "include",
         body: JSON.stringify({ messages: requestMessages }),

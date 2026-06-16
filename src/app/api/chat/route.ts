@@ -94,7 +94,10 @@ export async function POST(req: Request) {
   let mcpClient: Awaited<ReturnType<typeof createVercelAiMcpClient>> | undefined;
 
   try {
-    const locale = await getUserLocale(userId);
+    // Read timezone from the browser header; getUserLocale validates and falls
+    // back to Asia/Kolkata if missing or not a recognised IANA timezone.
+    const timezoneHeader = req.headers.get("x-timezone") ?? undefined;
+    const locale = await getUserLocale(userId, timezoneHeader);
 
     const webSearchTool = openai.tools.webSearch({
       searchContextSize: "medium",
@@ -112,7 +115,6 @@ export async function POST(req: Request) {
             headers: { cookie: req.headers.get("cookie") ?? "" },
           });
           const mcpTools = await mcpClient.tools();
-          console.log("MCP tools:", Object.keys(mcpTools));
           return { ...mcpTools };
         })()
       : undefined;

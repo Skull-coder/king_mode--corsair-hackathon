@@ -21,16 +21,11 @@ async function asyncPool<T>(
 }
 
 export async function GET(request: NextRequest) {
-  // Security check
-  const { searchParams } = new URL(request.url);
-  // if (searchParams.get("secret") !== process.env.CRON_SECRET) {
-  //   return new NextResponse("Unauthorized", { status: 401 });
-  // }
   // Authenticate using the built-in Vercel cron header
-  // if (request.headers.get("x-vercel-cron") !== "true") {
-  //   console.log("error in cron/check-reminders !")
-  //   return new NextResponse("Forbidden", { status: 403 });
-  // }
+  if (request.headers.get("x-vercel-cron") !== "true") {
+    console.log("error in cron/check-reminders !")
+    return new NextResponse("Forbidden", { status: 403 });
+  }
 
   try {
     const now = new Date();

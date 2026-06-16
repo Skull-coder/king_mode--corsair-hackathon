@@ -1,19 +1,25 @@
 // src/lib/db/index.ts
 import 'dotenv/config';
 import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 
-// Create exactly ONE connection pool for the entire application lifetime
+/**
+ * pg.Pool — kept for Corsair which needs a traditional pg-compatible client.
+ * Do NOT use this directly in app code.
+ */
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 10,                 // Safe limit for serverless/Next.js environments
+  max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// Initialize Drizzle with your combined schemas
-export const db = drizzle({ 
-  client: pool, 
-  schema 
-});
+/**
+ * Drizzle ORM client using Neon's HTTP adapter.
+ * Serverless-safe — each query is an HTTP call, no persistent TCP connections.
+ * Use this for all app queries.
+ */
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
