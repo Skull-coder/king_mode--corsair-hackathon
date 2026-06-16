@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       emailAddress: email_addresses[0].email_address,
     });
 
-    console.log("user created in user table")
+    
   }
   
   return new Response("OK", { status: 200 });

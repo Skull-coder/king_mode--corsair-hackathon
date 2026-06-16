@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
         const replyFound = (thread.messages ?? []).some((msg: any) => {
           const headers: any[] = msg.payload?.headers ?? [];
 
-          console.log("HEADERS WE GOT IN REPLY FOUND:", JSON.stringify(headers));
 
           const from =
             headers.find((h) => h.name?.toLowerCase() === "from")?.value ?? "";

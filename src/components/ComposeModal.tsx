@@ -182,7 +182,6 @@ export function ComposeModal({
       // ─── Create reminder if configured ──────────────────────────
       if (remindOption) {
         const remindAfter = computeRemindAfter();
-        console.log("created reminder")
         if (remindAfter) {
           createReminder.mutate({
             threadId,

@@ -18,8 +18,6 @@ export async function POST(request: NextRequest) {
       body = text?.trim() ? text : {};
     }
 
-    console.log("Raw webhook body:");
-    console.log(JSON.stringify(body, null, 2));
 
     const headers = Object.fromEntries(request.headers.entries());
 
@@ -35,20 +33,11 @@ export async function POST(request: NextRequest) {
 
         const decodedPayload = JSON.parse(decodedString);
 
-        console.log("Decoded Gmail payload:");
-        console.log(decodedPayload);
-
         const incomingEmail = decodedPayload.emailAddress;
 
         if (incomingEmail) {
           const user = await db.query.users.findFirst({
             where: eq(users.emailAddress, incomingEmail),
-          });
-
-          console.log("User lookup result:", {
-            incomingEmail,
-            userId: user?.id,
-            dbEmail: user?.emailAddress,
           });
 
           if (!user) {
@@ -93,13 +82,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Processing webhook with tenant:", targetTenantId);
 
     const result = await processWebhook(corsair, headers, body, {
       tenantId: targetTenantId,
     });
 
-    console.log("Webhook processed successfully");
 
     broadcastRefresh();
 

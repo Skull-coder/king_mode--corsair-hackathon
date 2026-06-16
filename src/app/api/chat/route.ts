@@ -13,6 +13,13 @@ export const maxDuration = 60;
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
+  fetch: async (url, init) => {
+    console.log(">>> AI REQUEST URL:", url);
+    console.log(">>> AI REQUEST BODY:", init?.body);
+    const response = await fetch(url, init);
+    console.log(">>> AI RESPONSE STATUS:", response.status);
+    return response;
+  }
 });
 
 // What the frontend actually sends
@@ -102,6 +109,12 @@ export async function POST(req: Request) {
     const system = mcpClient?.instructions
       ? `${buildKingSystemPrompt({ gmailConnected, calendarConnected, timezone: locale.timezone, country: locale.country })}\n\n${mcpClient.instructions}`
       : buildKingSystemPrompt({ gmailConnected, calendarConnected, timezone: locale.timezone, country: locale.country });
+
+    console.log(">>> MODEL DETAILS:", {
+      modelId: openrouter.chat("google/gemma-4-31b-it:free").modelId,
+      constructorName: (openrouter.chat("google/gemma-4-31b-it:free") as any).constructor.name,
+      provider: openrouter.chat("google/gemma-4-31b-it:free").provider,
+    });
 
     const result = streamText({
       model: openrouter.chat("google/gemma-4-31b-it:free"),

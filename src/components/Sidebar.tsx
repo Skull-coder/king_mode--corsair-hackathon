@@ -67,7 +67,6 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
-  console.log("user:", user);
 
   const initials =
     user?.firstName?.charAt(0)?.toUpperCase() ||

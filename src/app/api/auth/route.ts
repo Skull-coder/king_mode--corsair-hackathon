@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     const tenantId = result.tenantId;
     const plugin = result.plugin;
 
-    console.log("tenantId: ",tenantId)
 
     
     

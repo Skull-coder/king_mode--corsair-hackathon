@@ -39,11 +39,6 @@ export async function GET(request: NextRequest) {
       })
       .where(eq(users.id, userId));
 
-    console.log({
-      userId,
-      email: user.emailAddresses[0]?.emailAddress,
-    });
-
     const response = NextResponse.redirect(url);
     response.cookies.set("oauth_state", state, {
       httpOnly: true,
