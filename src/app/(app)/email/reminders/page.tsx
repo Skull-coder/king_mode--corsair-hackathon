@@ -61,7 +61,7 @@ export default function RemindersPage() {
         <div className="flex space-x-6 border-b border-gray-800 pb-3 mb-6">
           <Link
             href="/email/inbox"
-            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -118,7 +118,7 @@ export default function RemindersPage() {
           </Link>
           <Link
             href="/email/reminders"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors"
           >
             <svg
               className="w-4 h-4"

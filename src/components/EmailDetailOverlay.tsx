@@ -137,8 +137,6 @@ function getAvatarStyle(name: string) {
   return "bg-gray-800 text-gray-300 border-gray-700";
 }
 
-
-
 interface EmailDetailOverlayProps {
   threadId: string;
   context: "inbox" | "sent";
@@ -157,6 +155,19 @@ export function EmailDetailOverlay({
 
   const [replyTo, setReplyTo] = useState<ParsedEmail | null>(null);
   const [replyBody, setReplyBody] = useState("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when reply panel opens
+  useEffect(() => {
+    if (replyTo && scrollContainerRef.current) {
+      requestAnimationFrame(() => {
+        scrollContainerRef.current?.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+    }
+  }, [replyTo]);
 
   const handleClose = () => {
     onClose();
@@ -242,7 +253,10 @@ export function EmailDetailOverlay({
   };
 
   return (
-    <div className="absolute inset-0 z-40 bg-[#0e1116] overflow-y-auto p-8 animate-fade-in flex flex-col items-center">
+    <div
+      ref={scrollContainerRef}
+      className="absolute inset-0 z-40 bg-[#0e1116] overflow-y-auto p-8 animate-fade-in flex flex-col items-center"
+    >
       <div className="w-full max-w-4xl">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-sm mb-6 font-medium">
@@ -313,7 +327,7 @@ interface ReplyPanelProps {
   replyTo: { from: string };
   body: string;
   onChangeBody: (value: string) => void;
-  onSend: () => Promise<{ threadId: string; messageId: string }>;   // now returns IDs
+  onSend: () => Promise<{ threadId: string; messageId: string }>; // now returns IDs
   onDiscard: () => void;
   isSending: boolean;
   threadId: string;
@@ -404,27 +418,30 @@ function ReplyPanel({
   const { addToast } = useToast();
 
   const handleSend = async () => {
-  try {
-    const result = await onSend();   // { threadId, messageId }
-    if (remindOption) {
-      const remindAfter = computeRemindAfter();
-      if (remindAfter && result.threadId && result.messageId) {
-        createReminder.mutate({
-          threadId: result.threadId,
-          sentMessageId: result.messageId,
-          sentAt: new Date().toISOString(),
-          remindAfter: remindAfter.toISOString(),
-          recipientEmail,
-          subject: `Re: ${subject}`,
-        });
-      } else if (!result.threadId || !result.messageId) {
-        addToast("error", "Reply sent but reminder could not be created (missing identifiers)");
+    try {
+      const result = await onSend(); // { threadId, messageId }
+      if (remindOption) {
+        const remindAfter = computeRemindAfter();
+        if (remindAfter && result.threadId && result.messageId) {
+          createReminder.mutate({
+            threadId: result.threadId,
+            sentMessageId: result.messageId,
+            sentAt: new Date().toISOString(),
+            remindAfter: remindAfter.toISOString(),
+            recipientEmail,
+            subject: `Re: ${subject}`,
+          });
+        } else if (!result.threadId || !result.messageId) {
+          addToast(
+            "error",
+            "Reply sent but reminder could not be created (missing identifiers)",
+          );
+        }
       }
+    } catch (err) {
+      // onSend handles its own toasts; no additional action needed
     }
-  } catch (err) {
-    // onSend handles its own toasts; no additional action needed
-  }
-};
+  };
 
   useHotkeys("ctrl+enter", handleSend, {
     enabled: true,

@@ -1,34 +1,28 @@
 "use client";
 
-import { useState } from "react";
 import { useEmails } from "@/lib/hooks/useEmails";
 import { useSSE } from "@/lib/hooks/useSSE";
 import { EmailList } from "@/components/EmailList";
 import { EmailListSkeleton } from "@/components/LoadingSkeleton";
-import { ComposeModal } from "@/components/ComposeModal";
 import Link from "next/link";
-import type { ParsedEmail } from "@/lib/email-parser";
 
-export default function DraftsPage() {
+export default function SentPage() {
   useSSE();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
-    useEmails("DRAFT");
+    useEmails("SENT");
 
   const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
-
-  // State for editing a draft via ComposeModal
-  const [editingDraft, setEditingDraft] = useState<ParsedEmail | null>(null);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0e1116] text-white overflow-y-auto">
       <div className="p-8 pb-4 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Drafts</h1>
+        <h1 className="text-2xl font-bold mb-6">Sent</h1>
 
         {/* Navigation Tabs */}
         <div className="flex space-x-6 border-b border-gray-800 pb-3 mb-6">
           <Link
             href="/email/inbox"
-            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -47,7 +41,7 @@ export default function DraftsPage() {
           </Link>
           <Link
             href="/email/sent"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -112,26 +106,13 @@ export default function DraftsPage() {
             emails={allMessages}
             isLoading={isLoading}
             error={error as Error | null}
-            context="draft"
+            context="sent"
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={() => fetchNextPage()}
-            onEmailClick={(email) => setEditingDraft(email)}
           />
         )}
       </div>
-
-      {/* ComposeModal for editing drafts */}
-      <ComposeModal
-        isOpen={!!editingDraft}
-        onClose={() => setEditingDraft(null)}
-        initialTo={editingDraft?.to || ""}
-        initialSubject={
-          editingDraft?.subject === "(No Subject)" ? "" : editingDraft?.subject || ""
-        }
-        initialBody={editingDraft?.textBody || editingDraft?.htmlBody || ""}
-        draftId={editingDraft?.draftId}
-      />
     </div>
   );
 }
