@@ -1,4 +1,5 @@
 // app/api/chat/route.ts
+import "@ai-sdk/mcp"; // force Vercel NFT to include this transitive dep
 import { createVercelAiMcpClient } from "@corsair-dev/mcp"
 import { createOpenAI } from "@ai-sdk/openai";
 import { openai } from "@ai-sdk/openai"
