@@ -101,6 +101,7 @@ export default function SettingsPage() {
         { action: "Go to Drafts", description: "Navigate to draft emails page", keys: ["Shift", "D"] },
         { action: "Go to Reminders", description: "Navigate to email reminders list", keys: ["Shift", "R"] },
         { action: "Go to Calendar", description: "Navigate to the Google Calendar view", keys: ["Shift", "C"] },
+        { action: "Go to Settings", description: "Navigate to the Settings", keys: ["?"] },
         { action: "Go to KING MODE", description: "Navigate to the Sovereign AI Executor page", keys: ["Shift", "K"] },
       ],
     },

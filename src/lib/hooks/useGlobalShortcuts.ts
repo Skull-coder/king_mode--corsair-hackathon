@@ -13,4 +13,5 @@ export function useGlobalShortcuts() {
   useHotkeys("shift+r", () => router.push("/email/reminders"));
   useHotkeys("shift+c", () => router.push("/calendar"));
   useHotkeys("shift+k", () => router.push("/king"));
+  useHotkeys("?", ()=>router.push("/settings"))
 }
