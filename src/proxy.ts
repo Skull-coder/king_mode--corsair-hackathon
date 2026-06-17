@@ -6,7 +6,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)', // CRITICAL: This allows Clerk and Corsair servers to talk to your API
-  '/api/sse(.*)'        // SSE endpoint — public so EventSource can connect
+  '/api/sse(.*)',        // SSE endpoint — public so EventSource can connect
+  '/terms',
+  '/privacy'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
