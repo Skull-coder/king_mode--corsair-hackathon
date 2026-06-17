@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { generateOAuthUrl } from "corsair/oauth";
 import { corsair } from "@/../corsair"; // Imports from your root corsair.ts
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
 import { env } from "@/env";
 
 export async function GET(request: NextRequest) {
@@ -23,22 +20,6 @@ export async function GET(request: NextRequest) {
       tenantId: userId, // Maps Clerk ID to Corsair
       redirectUri: REDIRECT_URI,
     });
-
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId!);
-    
-    await db
-      .update(users)
-      .set({
-        plugins: sql`
-      CASE
-        WHEN ${plugin} = ANY(${users.plugins})
-        THEN ${users.plugins}
-        ELSE array_append(${users.plugins}, ${plugin})
-      END
-    `,
-      })
-      .where(eq(users.id, userId));
 
     const response = NextResponse.redirect(url);
     response.cookies.set("oauth_state", state, {

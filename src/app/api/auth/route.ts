@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { processOAuthCallback } from "corsair/oauth";
 import { corsair } from "@/../corsair";
 import { env } from "@/env";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -29,10 +32,19 @@ export async function GET(request: NextRequest) {
     const tenantId = result.tenantId;
     const plugin = result.plugin;
 
-
-    
-    
-    
+    // Only record the plugin AFTER the user has successfully granted permissions
+    await db
+      .update(users)
+      .set({
+        plugins: sql`
+          CASE
+            WHEN ${plugin} = ANY(${users.plugins})
+            THEN ${users.plugins}
+            ELSE array_append(${users.plugins}, ${plugin})
+          END
+        `,
+      })
+      .where(eq(users.id, tenantId));
 
     // Bounce the user back to the frontend
     const response = NextResponse.redirect(
