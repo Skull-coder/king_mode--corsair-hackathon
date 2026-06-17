@@ -191,62 +191,81 @@ export default function SettingsPage() {
         </div>
 
         {/* BYOK Section */}
-        <div className="mb-10 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden shadow-xl p-6">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
-            <svg className="w-5 h-5 text-[#5c4dff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m-9 0a2 2 0 012-2m9 9a2 2 0 012 2m-9 0a2 2 0 012-2m3-6a3 3 0 100-6 3 3 0 000 6zm-3 0a3 3 0 100-6 3 3 0 000 6zm0 6a3 3 0 100-6 3 3 0 000 6zm3 0a3 3 0 100-6 3 3 0 000 6z" />
-            </svg>
-            Bring Your Own Key (BYOK)
-          </h2>
-          <p className="text-xs text-[#8b949e] mb-6">
-            Configure your own custom LLM provider, API key, and model name to run King Mode.
-          </p>
+        <div className="mb-10 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden shadow-xl">
+          <div className="p-6 border-b border-gray-800/80">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <svg className="w-5 h-5 text-[#5c4dff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m-9 0a2 2 0 012-2m9 9a2 2 0 012 2m-9 0a2 2 0 012-2m3-6a3 3 0 100-6 3 3 0 000 6zm-3 0a3 3 0 100-6 3 3 0 000 6zm0 6a3 3 0 100-6 3 3 0 000 6zm3 0a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+              Bring Your Own Key (BYOK)
+            </h2>
+            <p className="text-xs text-[#8b949e] mt-1">
+              Configure your own custom LLM provider, API key, and model name to run King Mode.
+            </p>
+          </div>
 
-          <div className="space-y-4 max-w-xl">
-            {/* Provider */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-300">API Provider</label>
-              <select
-                value={provider}
-                onChange={(e) => handleProviderChange(e.target.value)}
-                className="px-4 py-2.5 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
-              >
-                <option value="openai">OpenAI</option>
-                <option value="gemini">Google Gemini (API Studio)</option>
-                <option value="openrouter">OpenRouter</option>
-              </select>
+          <div className="p-6 space-y-5">
+            {/* Row 1: Provider + Model Name side-by-side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Provider */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-300">API Provider</label>
+                <p className="text-[11px] text-[#8b949e] -mt-0.5">The LLM service that will handle your requests.</p>
+                <div className="relative">
+                  <select
+                    value={provider}
+                    onChange={(e) => handleProviderChange(e.target.value)}
+                    className="w-full appearance-none px-4 py-2.5 pr-10 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors cursor-pointer"
+                  >
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Google Gemini (API Studio)</option>
+                    <option value="openrouter">OpenRouter</option>
+                  </select>
+                  <svg className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8b949e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Model Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-300">Model Name</label>
+                <p className="text-[11px] text-[#8b949e] -mt-0.5">The specific model identifier your provider expects.</p>
+                <input
+                  type="text"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  placeholder="e.g. gpt-4o, gemini-1.5-pro, google/gemma-4-31b-it:free"
+                  className="w-full px-4 py-2.5 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
+                />
+              </div>
             </div>
 
-            {/* API Key */}
+            {/* Row 2: API Key full width */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-gray-300">API Key</label>
+              <p className="text-[11px] text-[#8b949e] -mt-0.5">Your secret key — stored locally in the browser and never sent to our servers.</p>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your API key"
-                className="px-4 py-2.5 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
+                className="w-full px-4 py-2.5 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
               />
             </div>
 
-            {/* Model Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-300">Model Name</label>
-              <input
-                type="text"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-                placeholder="e.g. gpt-4o, gemini-1.5-pro, google/gemma-4-31b-it:free"
-                className="px-4 py-2.5 bg-[#0e1116] border border-gray-800 focus:border-[#5c4dff] rounded-xl text-sm text-white focus:outline-none transition-colors"
-              />
+            {/* Save — right-aligned */}
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={handleSaveKeys}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5c4dff] hover:bg-[#4b3ce6] text-white rounded-xl text-sm font-semibold transition-colors duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Configuration
+              </button>
             </div>
-
-            <button
-              onClick={handleSaveKeys}
-              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 bg-[#5c4dff] hover:bg-[#4b3ce6] text-white rounded-xl text-sm font-semibold transition-colors duration-200"
-            >
-              Save Configuration
-            </button>
           </div>
         </div>
 

@@ -11,6 +11,7 @@ export default function LandingPage() {
       {/* Background Decorative Gradients */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#5c4dff]/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2"></div>
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-[#ea4335]/3 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#10b981]/3 rounded-full blur-[130px] pointer-events-none translate-y-1/3 -translate-x-1/4"></div>
 
       {/* Navbar */}
       <header className="relative z-10 max-w-7xl w-full mx-auto px-6 h-20 flex items-center justify-between border-b border-gray-800/40 backdrop-blur-md bg-[#0e1116]/60">
@@ -66,21 +67,24 @@ export default function LandingPage() {
           Superhuman Gmail & Calendar Workflows
         </div>
 
-        {/* Title */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.15] mb-6">
-          Take Command in{" "}
-          <span className="bg-gradient-to-r from-[#5c4dff] via-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">
-            King Mode
-          </span>
-        </h1>
+        {/* Title with animated gradient glow */}
+        <div className="relative animate-fade-in [animation-delay:100ms]">
+          <div className="absolute -inset-4 bg-gradient-to-r from-[#5c4dff]/20 via-[#8b5cf6]/15 to-[#ec4899]/20 rounded-3xl blur-2xl opacity-60 animate-pulse pointer-events-none"></div>
+          <h1 className="relative text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.15] mb-6">
+            Take Command in{" "}
+            <span className="bg-gradient-to-r from-[#5c4dff] via-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">
+              King Mode
+            </span>
+          </h1>
+        </div>
 
         {/* Subtitle */}
-        <p className="text-lg sm:text-xl text-[#8b949e] max-w-2xl leading-relaxed mb-10">
+        <p className="text-lg sm:text-xl text-[#8b949e] max-w-3xl leading-relaxed mb-10 animate-fade-in [animation-delay:200ms]">
           A lightning-fast, keyboard-driven inbox and calendar client equipped with a Sovereign AI Executor to handle your email and schedule operations in natural language.
         </p>
 
         {/* CTA Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-16 justify-center w-full max-w-md">
+        <div className="flex flex-col sm:flex-row gap-4 mb-16 justify-center w-full max-w-md animate-fade-in [animation-delay:300ms]">
           {user ? (
             <Link
               href="/email/inbox"
@@ -115,71 +119,85 @@ export default function LandingPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
             {/* Feature 1 */}
-            <div className="flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
+            <div className="relative flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-all duration-300 hover:scale-[1.02] group/card overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5c4dff] rounded-l-xl opacity-60 group-hover/card:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#5c4dff]/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl"></div>
+              <div className="relative w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
                 ⚡
               </div>
-              <h3 className="font-semibold text-lg text-white">Sovereign AI Executor</h3>
-              <p className="text-sm text-[#8b949e] leading-relaxed">
+              <h3 className="relative font-semibold text-lg text-white">Sovereign AI Executor</h3>
+              <p className="relative text-sm text-[#8b949e] leading-relaxed">
                 Connect your accounts and let King Mode do the work. Draft replies, query calendar events, or check schedules using simple, direct chat instructions.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
+            <div className="relative flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-all duration-300 hover:scale-[1.02] group/card overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5c4dff] rounded-l-xl opacity-60 group-hover/card:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#5c4dff]/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl"></div>
+              <div className="relative w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
                 ⌨️
               </div>
-              <h3 className="font-semibold text-lg text-white">Keyboard-First Interface</h3>
-              <p className="text-sm text-[#8b949e] leading-relaxed">
+              <h3 className="relative font-semibold text-lg text-white">Keyboard-First Interface</h3>
+              <p className="relative text-sm text-[#8b949e] leading-relaxed">
                 Fly through your emails and calendar without your hands leaving the keys. Leverage reactive react-hotkeys bindings for blazing-fast navigation.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-colors">
-              <div className="w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
+            <div className="relative flex flex-col space-y-3 p-4 rounded-xl hover:bg-white/[0.02] transition-all duration-300 hover:scale-[1.02] group/card overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5c4dff] rounded-l-xl opacity-60 group-hover/card:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#5c4dff]/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl"></div>
+              <div className="relative w-10 h-10 rounded-lg bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center text-lg">
                 📅
               </div>
-              <h3 className="font-semibold text-lg text-white">Integrated Scheduler</h3>
-              <p className="text-sm text-[#8b949e] leading-relaxed">
+              <h3 className="relative font-semibold text-lg text-white">Integrated Scheduler</h3>
+              <p className="relative text-sm text-[#8b949e] leading-relaxed">
                 No more context switching. Schedule Google Calendar events directly beside your inbox with quick overlays and automatic timezone parsing.
               </p>
             </div>
           </div>
 
           {/* Quick Hotkey Cheat Sheet Preview inside dashboard */}
-          <div className="mt-8 pt-6 border-t border-gray-800/60 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex flex-col space-y-1">
-              <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Inbox</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
-                <span className="text-xs text-[#8b949e]">+</span>
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">I</kbd>
-              </div>
+          <div className="mt-8 pt-6 border-t border-gray-800/60">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-4 h-4 text-[#8b949e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+              <span className="text-xs font-semibold text-[#8b949e] uppercase tracking-wider">Quick Shortcuts</span>
             </div>
-            <div className="flex flex-col space-y-1">
-              <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">King Mode AI</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
-                <span className="text-xs text-[#8b949e]">+</span>
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">K</kbd>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="flex flex-col space-y-1.5 bg-[#0e1116]/50 rounded-xl p-3">
+                <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Inbox</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
+                  <span className="text-xs text-[#8b949e]">+</span>
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">I</kbd>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col space-y-1">
-              <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Calendar</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
-                <span className="text-xs text-[#8b949e]">+</span>
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">C</kbd>
+              <div className="flex flex-col space-y-1.5 bg-[#0e1116]/50 rounded-xl p-3">
+                <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">King Mode AI</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
+                  <span className="text-xs text-[#8b949e]">+</span>
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">K</kbd>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col space-y-1">
-              <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Compose Email</span>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
-                <span className="text-xs text-[#8b949e]">+</span>
-                <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">P</kbd>
+              <div className="flex flex-col space-y-1.5 bg-[#0e1116]/50 rounded-xl p-3">
+                <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Calendar</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
+                  <span className="text-xs text-[#8b949e]">+</span>
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">C</kbd>
+                </div>
+              </div>
+              <div className="flex flex-col space-y-1.5 bg-[#0e1116]/50 rounded-xl p-3">
+                <span className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider">Compose Email</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">Shift</kbd>
+                  <span className="text-xs text-[#8b949e]">+</span>
+                  <kbd className="px-1.5 py-0.5 bg-[#0e1116] border border-gray-800 rounded text-[10px] font-mono text-gray-300">P</kbd>
+                </div>
               </div>
             </div>
           </div>
@@ -189,6 +207,12 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 max-w-7xl w-full mx-auto px-6 py-8 border-t border-gray-800/40 text-center text-xs text-[#8b949e]">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-[#8b949e]">Built with</span>
+          <span className="px-2 py-0.5 bg-[#151821] border border-gray-800/60 rounded-md text-[10px] font-medium text-gray-300">Next.js</span>
+          <span className="px-2 py-0.5 bg-[#151821] border border-gray-800/60 rounded-md text-[10px] font-medium text-gray-300">Clerk</span>
+          <span className="px-2 py-0.5 bg-[#151821] border border-gray-800/60 rounded-md text-[10px] font-medium text-gray-300">Corsair</span>
+        </div>
         <p>&copy; {new Date().getFullYear()} King Mode. All rights reserved. Secured via Clerk Authentication.</p>
       </footer>
     </div>
