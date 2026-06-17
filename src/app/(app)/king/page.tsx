@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import ReactMarkdown from "react-markdown";
 
 export type Message = {
   id: string;
@@ -379,7 +380,7 @@ export default function KingChatPage() {
                        </div>
                     )}
                     <div className="whitespace-pre-wrap leading-relaxed">
-                      {message.content}
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
                       {message.isStreaming && (
                         <span className="inline-block w-2 h-4 ml-1 bg-[#5c4dff] animate-pulse align-middle" />
                       )}
