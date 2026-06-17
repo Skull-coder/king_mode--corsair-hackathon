@@ -3,6 +3,7 @@ import { createCorsair } from "corsair";
 import { gmail } from "@corsair-dev/gmail";
 import { googlecalendar } from "@corsair-dev/googlecalendar";
 import { pool } from "./src/lib/db";
+import { env } from "./src/env";
 
 export const corsair = createCorsair({
   multiTenancy: true,
@@ -15,5 +16,5 @@ export const corsair = createCorsair({
     googlecalendar({ authType: "oauth_2" }),
   ],
   database: pool,
-  kek: process.env.CORSAIR_KEK!,
+  kek: env.CORSAIR_KEK,
 });

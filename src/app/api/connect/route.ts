@@ -5,6 +5,7 @@ import { corsair } from "@/../corsair"; // Imports from your root corsair.ts
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { env } from "@/env";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const validPlugins = ["gmail", "googlecalendar"];
     if (!plugin || !validPlugins.includes(plugin))
       throw new Error("invalid plugin");
-    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth`;
+    const REDIRECT_URI = `${env.NEXT_PUBLIC_APP_URL}/api/auth`;
 
     const { url, state } = await generateOAuthUrl(corsair, plugin, {
       tenantId: userId, // Maps Clerk ID to Corsair
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set("oauth_state", state, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production" || false,
+      secure: env.NODE_ENV === "production" || false,
       maxAge: 60 * 10,
     });
     return response;

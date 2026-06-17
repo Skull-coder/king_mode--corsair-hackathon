@@ -6,11 +6,11 @@ import { getCorsairTenant } from "@/lib/corsair";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await getCorsairTenant();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { status } = body;
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processOAuthCallback } from "corsair/oauth";
 import { corsair } from "@/../corsair";
+import { env } from "@/env";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth`;
+    const REDIRECT_URI = `${env.NEXT_PUBLIC_APP_URL}/api/auth`;
 
     const result = await processOAuthCallback(corsair, {
       code,

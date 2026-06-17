@@ -7,13 +7,10 @@ import { auth } from "@clerk/nextjs/server"
 import { buildKingSystemPrompt } from "@/lib/ai"
 import { getUserLocale } from "@/lib/locale"
 import { hasPlugin } from "@/lib/corsair";
+import { env } from "@/env";
 
 export const maxDuration = 60;
 
-const openrouter = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
 
 // What the frontend actually sends
 type IncomingMessage = {
@@ -111,7 +108,7 @@ export async function POST(req: Request) {
     const mergedTools = hasConnectedIntegration
       ? await (async () => {
           mcpClient = await createVercelAiMcpClient({
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mcp`,
+            url: `${env.NEXT_PUBLIC_APP_URL}/api/mcp`,
             headers: { cookie: req.headers.get("cookie") ?? "" },
           });
           const mcpTools = await mcpClient.tools();
