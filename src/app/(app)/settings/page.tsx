@@ -96,12 +96,12 @@ export default function SettingsPage() {
       title: "Global Navigation",
       description: "Quickly hop between pages from anywhere in the application.",
       items: [
+        { action: "Go to Settings", description: "Navigate to the Settings", keys: ["Shift", "x"] },
         { action: "Go to Inbox", description: "Navigate to your email inbox list", keys: ["Shift", "I"] },
         { action: "Go to Sent", description: "Navigate to sent emails page", keys: ["Shift", "S"] },
         { action: "Go to Drafts", description: "Navigate to draft emails page", keys: ["Shift", "D"] },
         { action: "Go to Reminders", description: "Navigate to email reminders list", keys: ["Shift", "R"] },
         { action: "Go to Calendar", description: "Navigate to the Google Calendar view", keys: ["Shift", "C"] },
-        { action: "Go to Settings", description: "Navigate to the Settings", keys: ["?"] },
         { action: "Go to KING MODE", description: "Navigate to the Sovereign AI Executor page", keys: ["Shift", "K"] },
       ],
     },
