@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isRemovingPlugin, setIsRemovingPlugin] = useState(false);
 
   const { addToast } = useToast();
   const [apiKey, setApiKey] = useState("");
@@ -68,6 +69,25 @@ export default function SettingsPage() {
     } catch (err) {
       console.error("Failed to sign out:", err);
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleRemovePlugin = async (plugin: "gmail" | "googlecalendar") => {
+    setIsRemovingPlugin(true);
+    try {
+      const res = await fetch("/api/auth/remove-plugin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plugin }),
+      });
+      if (!res.ok) throw new Error("Failed to disconnect");
+      addToast("success", `Successfully disconnected ${plugin === "gmail" ? "Gmail" : "Google Calendar"}.`);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      addToast("error", `Failed to disconnect ${plugin === "gmail" ? "Gmail" : "Google Calendar"}.`);
+    } finally {
+      setIsRemovingPlugin(false);
     }
   };
 
@@ -264,6 +284,51 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
                 Save Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Integrations Section */}
+        <div className="mb-10 bg-[#151821] border border-gray-800/80 rounded-2xl overflow-hidden shadow-xl">
+          <div className="p-6 border-b border-gray-800/80">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <svg className="w-5 h-5 text-[#5c4dff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Connected Integrations
+            </h2>
+            <p className="text-xs text-[#8b949e] mt-1">
+              Manage your connected services and revoke access if needed.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#0e1116] border border-gray-800 rounded-xl">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-200">Gmail</h3>
+                <p className="text-[11px] text-[#8b949e] mt-0.5">Disconnect your Gmail integration.</p>
+              </div>
+              <button
+                onClick={() => handleRemovePlugin("gmail")}
+                disabled={isRemovingPlugin}
+                className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                Disconnect
+              </button>
+            </div>
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#0e1116] border border-gray-800 rounded-xl">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-200">Google Calendar</h3>
+                <p className="text-[11px] text-[#8b949e] mt-0.5">Disconnect your Google Calendar integration.</p>
+              </div>
+              <button
+                onClick={() => handleRemovePlugin("googlecalendar")}
+                disabled={isRemovingPlugin}
+                className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                Disconnect
               </button>
             </div>
           </div>
