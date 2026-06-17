@@ -151,13 +151,13 @@ export default function KingChatPage() {
       });
 
       if (!res.ok) {
-        const errorText = await res.text();
+        console.error("API error status:", res.status);
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
               ? {
                   ...m,
-                  content: `Error: ${errorText || `HTTP ${res.status}`}`,
+                  content: "I'm sorry, I encountered an error processing your request. Please try again.",
                   isStreaming: false,
                 }
               : m,
@@ -172,7 +172,7 @@ export default function KingChatPage() {
             m.id === assistantId
               ? {
                   ...m,
-                  content: "Error: No response body",
+                  content: "I'm sorry, I encountered an error processing your request. Please try again.",
                   isStreaming: false,
                 }
               : m,
@@ -237,12 +237,13 @@ export default function KingChatPage() {
                 streamFinished = true;
                 break;
               case "error":
+                console.error("Stream error chunk:", chunk.errorText);
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantId
                       ? {
                           ...m,
-                          content: `Error: ${chunk.errorText ?? "Unknown error"}`,
+                          content: "I'm sorry, I encountered an error processing your request. Please try again.",
                           isStreaming: false,
                         }
                       : m,
@@ -270,11 +271,11 @@ export default function KingChatPage() {
         ),
       );
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("Chat API error:", err);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantId
-            ? { ...m, content: `Error: ${errorMessage}`, isStreaming: false }
+            ? { ...m, content: "I'm sorry, I encountered an error processing your request. Please try again.", isStreaming: false }
             : m,
         ),
       );
