@@ -1,6 +1,8 @@
 # 👑 King Mode
 
 > An AI-powered Email & Calendar Operating System — built for the Corsair Hackathon
+> 
+> 🔴 **Live Demo**: [https://kingmode.skullcoder.dev](https://kingmode.skullcoder.dev)
 
 King Mode is a lightning-fast, keyboard-driven productivity platform that transforms Gmail and Google Calendar into an autonomous, context-aware AI assistant ecosystem. It features a traditional workspace UI and a cinematic "KING MODE" AI command center that executes complex multi-step operations in natural language.
 
@@ -8,14 +10,16 @@ King Mode is a lightning-fast, keyboard-driven productivity platform that transf
 
 ## ✨ Features
 
-- **Sovereign AI Executor** — Chat with an AI that can read emails, draft replies, create calendar events, and send emails autonomously in a single command
-- **Unified Inbox** — Full Gmail inbox with pagination, thread view, starring, archiving, and compose
-- **Google Calendar** — Week/month view with event creation, editing, and attendee management
-- **Real-time Updates** — Server-Sent Events (SSE) push live changes to the UI when webhooks fire — no page refreshes
-- **Keyboard-First** — Global shortcuts (`Shift+I` inbox, `Shift+K` King Mode, `Shift+C` calendar, `Shift+P` compose) for power users
-- **Multi-step AI Tool Calling** — The AI loops over Corsair MCP tools autonomously until the task is done (up to 20 steps)
-- **Reminder System** — Set follow-up reminders on emails; a Vercel cron fires every 5 minutes to check them
-- **MCP Server** — A full per-tenant Model Context Protocol server powering the AI's tool access
+- **Sovereign AI Executor** — Chat with an AI that can read emails, draft replies, create calendar events, and send emails autonomously in a single command. **Bring Your Own Key (BYOK)** to use your preferred LLM!
+- **Unified Inbox** — View your **Inbox, Sent messages, and Drafts**. Read threads, and **reply to messages** directly.
+- **Google Calendar** — Work just like you do in Google Calendar! Features week/month view, event creation, editing, and attendee management.
+- **Reminder System** — Set a reminder on an email so you know if you got replied to or not after a given period; a Vercel cron fires every 5 minutes to check them.
+- **Floating Action Button (FAB)** — Quickly send an email or create an event from anywhere in the app.
+- **Thread to Event** — In `/email/inbox/[threadId]` or `/email/sent/[threadId]`, use the three-dot menu to create an event by copying the title of the message to the event. *(Coming soon: AI integration to automatically set the time and title by analyzing the message).*
+- **Real-time Updates** — Server-Sent Events (SSE) push live changes to the UI when webhooks fire — no page refreshes.
+- **Keyboard-First** — Extensive global shortcuts for power users (see the list below).
+- **Multi-step AI Tool Calling** — The AI loops over Corsair MCP tools autonomously until the task is done (up to 20 steps).
+- **MCP Server** — A full per-tenant Model Context Protocol server powering the AI's tool access.
 
 ---
 
@@ -102,6 +106,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## 📁 Project Structure
 
+The codebase is structured to elegantly separate concerns between the UI app shell, real-time sync, and the AI/MCP functionality. The `src/app` directory handles all Next.js App Router routing, where `(app)` contains the authenticated workspace. The `api` routes securely process external webhook updates and AI tool calls. `src/lib` contains the core business logic, including database setup, Corsair MCP handling, and custom hooks.
+
 ```
 king_mode/
 ├── corsair.ts                    # Corsair client init (gmail + googlecalendar plugins)
@@ -181,12 +187,23 @@ User types command
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-|---|---|
-| `Shift + I` | Jump to Inbox |
-| `Shift + K` | Open King Mode AI |
-| `Shift + C` | Jump to Calendar |
-| `Shift + P` | Compose new email |
+| Category | Shortcut | Action |
+|---|---|---|
+| **Global Navigation** | `Shift + X` | Go to Settings |
+| | `Shift + I` | Jump to Inbox |
+| | `Shift + S` | Go to Sent |
+| | `Shift + D` | Go to Drafts |
+| | `Shift + R` | Go to Reminders |
+| | `Shift + C` | Jump to Calendar |
+| | `Shift + K` | Open King Mode AI |
+| **Email & Compose** | `Shift + P` | Compose new email |
+| | `Ctrl + Enter` | Send Email / Reply |
+| | `Left Arrow` | Switch to Draft Tab |
+| **Calendar & Event** | `Ctrl + Enter` | Create Event / Send |
+| | `Right Arrow` | Switch to Event Tab |
+| | `Escape` | Close Active Modals |
+| **King Mode Chatbot** | `Enter` | Send AI Prompt |
+| | `Shift + Enter` | Insert Newline |
 
 ---
 
