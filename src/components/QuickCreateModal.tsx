@@ -267,7 +267,7 @@ export function QuickCreateModal({
         if (remindAfter) {
           createReminder.mutate({
             threadId: sendResult.threadId ?? "",
-            sentMessageId: sendResult.messageId ?? "",
+            sentMessageId: sendResult.id ?? "",
             sentAt: new Date().toISOString(),
             remindAfter: remindAfter.toISOString(),
             recipientEmail: to.trim(), // primary recipient
