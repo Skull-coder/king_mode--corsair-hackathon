@@ -604,7 +604,7 @@ function ReplyPanel({
         <div className="px-6 py-4 border-t border-gray-800/80 bg-[#11141c]">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-gray-200">
-              ⏱ Remind me if no reply in…
+              ⏱ Track for follow-up if no reply by…
             </h4>
             <button
               onClick={() => {
@@ -675,7 +675,7 @@ function ReplyPanel({
                 d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Add Reminder
+            Track Follow-up
           </button>
 
           {/* existing other buttons */}

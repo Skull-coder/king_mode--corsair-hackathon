@@ -118,7 +118,7 @@ export default function ArchivesPage() {
                 d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>Reminders</span>
+            <span>Follow-ups</span>
           </Link>
           <Link
             href="/email/archives"

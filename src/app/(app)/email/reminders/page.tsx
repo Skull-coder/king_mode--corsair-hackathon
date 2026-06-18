@@ -44,18 +44,10 @@ export default function RemindersPage() {
   const { data: reminders, isLoading, error } = useReminders(statusFilter ?? undefined);
   const dismissMutation = useUpdateReminder();
 
-  // Navigation tabs (just like Inbox page)
-  const tabs = [
-    { href: "/email/inbox", label: "Inbox", icon: null },
-    { href: "/email/sent", label: "Sent", icon: null },
-    { href: "/email/drafts", label: "Drafts", icon: null },
-    { href: "/email/reminders", label: "Reminders", icon: null, active: true },
-  ];
-
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0e1116] text-white overflow-y-auto">
       <div className="p-8 pb-4 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Reminders</h1>
+        <h1 className="text-2xl font-bold mb-6">Follow-ups</h1>
 
         {/* Navigation Tabs */}
         <div className="flex space-x-1 border-b border-gray-800 pb-3 mb-6 overflow-x-auto">
@@ -133,7 +125,7 @@ export default function RemindersPage() {
                 d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>Reminders</span>
+            <span>Follow-ups</span>
           </Link>
           <Link
             href="/email/archives"

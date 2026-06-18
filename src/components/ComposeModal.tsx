@@ -290,7 +290,7 @@ export function ComposeModal({
             <div className="border border-gray-800 rounded-lg bg-[#11141c] p-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-gray-200">
-                  ⏱ Remind me if no reply in…
+                  ⏱ Track for follow-up if no reply by…
                 </h4>
                 <button
                   onClick={() => {
@@ -342,7 +342,7 @@ export function ComposeModal({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {showReminder ? "Reminder On" : "Add Reminder"}
+              {showReminder ? "Tracking On" : "Track Follow-up"}
             </button>
             
             {/* Send button */}
