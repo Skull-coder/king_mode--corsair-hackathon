@@ -71,20 +71,16 @@ DATABASE_URL="postgresql://..."
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
 
-# Corsair — get from https://corsair.dev → Instances
+# Corsair
 CORSAIR_API_KEY=ch_...
-CORSAIR_INSTANCE_ID=<your-instance-id>
 CORSAIR_KEK=<your-kek-hex>
-
-# AI Provider (OpenRouter recommended)
-OPENROUTER_API_KEY=sk-or-v1-...
 
 # Google OAuth (from Google Cloud Console)
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 
-# MCP (same as app URL in dev)
-MCP_SERVER_URL="http://localhost:3000/api/mcp"
+# NODE_ENV
+NODE_ENV="development" # development | production
 ```
 
 ### 3. Set Up the Database
