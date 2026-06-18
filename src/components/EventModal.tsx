@@ -148,11 +148,19 @@ export function EventModal({
   );
 
   const buildPayload = (): CalendarEvent => {
+    let finalEndDate = endDate;
+    if (allDay) {
+      // Google Calendar all-day end dates are exclusive, so add 1 day
+      const d = new Date(endDate);
+      d.setDate(d.getDate() + 1);
+      finalEndDate = toDateStr(d);
+    }
+
     const start = allDay
       ? { date: startDate }
       : { dateTime: `${startDate}T${startTime}:00`, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
     const end = allDay
-      ? { date: endDate }
+      ? { date: finalEndDate }
       : { dateTime: `${endDate}T${endTime}:00`, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
 
     return {

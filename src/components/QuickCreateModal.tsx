@@ -307,6 +307,17 @@ export function QuickCreateModal({
       addToast("error", "Event title is required");
       return;
     }
+
+    let finalEndDate = evEndDate;
+    if (evAllDay) {
+      const d = new Date(evEndDate);
+      d.setDate(d.getDate() + 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      finalEndDate = `${year}-${month}-${day}`;
+    }
+
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     createEvent(
       {
@@ -317,7 +328,7 @@ export function QuickCreateModal({
           ? { date: evStartDate }
           : { dateTime: `${evStartDate}T${evStartTime}:00`, timeZone: tz },
         end: evAllDay
-          ? { date: evEndDate }
+          ? { date: finalEndDate }
           : { dateTime: `${evEndDate}T${evEndTime}:00`, timeZone: tz },
         colorId: evColorId,
         visibility: evVisibility,

@@ -15,7 +15,7 @@ const attendeeSchema = z.object({
 
 const dateOrDateTimeSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD").optional(),
-  dateTime: z.string().datetime().optional(),
+  dateTime: z.string().optional(),
   timeZone: z.string().optional(),
 })
   .refine(
@@ -52,7 +52,7 @@ export const eventCreateSchema = z.object({
   sequence: z.number().int().optional(),
   originalStartTime: z.object({
     date: z.string().optional(),
-    dateTime: z.string().datetime().optional(),
+    dateTime: z.string().optional(),
     timeZone: z.string().optional(),
   }).optional(),
   recurringEventId: z.string().optional(),
