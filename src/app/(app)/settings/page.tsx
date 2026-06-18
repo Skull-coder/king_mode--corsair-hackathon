@@ -23,6 +23,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isRemovingPlugin, setIsRemovingPlugin] = useState(false);
+  const [connectedPlugins, setConnectedPlugins] = useState<string[]>([]);
+  const [isLoadingPlugins, setIsLoadingPlugins] = useState(true);
 
   const { addToast } = useToast();
   const [apiKey, setApiKey] = useState("");
@@ -39,6 +41,23 @@ export default function SettingsPage() {
       setProvider(savedProvider);
       setModelName(savedModel);
     }
+  }, []);
+
+  useEffect(() => {
+    async function fetchPlugins() {
+      try {
+        const res = await fetch("/api/user/me");
+        if (res.ok) {
+          const data = await res.json();
+          setConnectedPlugins(data.plugins || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plugins", err);
+      } finally {
+        setIsLoadingPlugins(false);
+      }
+    }
+    fetchPlugins();
   }, []);
 
   const handleSaveKeys = () => {
@@ -309,30 +328,66 @@ export default function SettingsPage() {
           <div className="p-6 space-y-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#0e1116] border border-gray-800 rounded-xl">
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">Gmail</h3>
-                <p className="text-[11px] text-[#8b949e] mt-0.5">Disconnect your Gmail integration.</p>
+                <h3 className="text-sm font-semibold text-gray-200 flex items-center gap-2">
+                  Gmail
+                  {isLoadingPlugins ? null : connectedPlugins.includes("gmail") ? (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20">Connected</span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-800 text-gray-400 border border-gray-700">Not Connected</span>
+                  )}
+                </h3>
+                <p className="text-[11px] text-[#8b949e] mt-0.5">Manage your Gmail integration.</p>
               </div>
-              <button
-                onClick={() => handleRemovePlugin("gmail")}
-                disabled={isRemovingPlugin}
-                className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-              >
-                Disconnect
-              </button>
+              {isLoadingPlugins ? (
+                <div className="h-8 w-24 bg-gray-800/50 rounded-lg animate-pulse"></div>
+              ) : connectedPlugins.includes("gmail") ? (
+                <button
+                  onClick={() => handleRemovePlugin("gmail")}
+                  disabled={isRemovingPlugin}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = "/api/connect?plugin=gmail"}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#10b981]/30 hover:border-[#10b981] text-[#10b981] hover:bg-[#10b981]/10 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Connect
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#0e1116] border border-gray-800 rounded-xl">
               <div>
-                <h3 className="text-sm font-semibold text-gray-200">Google Calendar</h3>
-                <p className="text-[11px] text-[#8b949e] mt-0.5">Disconnect your Google Calendar integration.</p>
+                <h3 className="text-sm font-semibold text-gray-200 flex items-center gap-2">
+                  Google Calendar
+                  {isLoadingPlugins ? null : connectedPlugins.includes("googlecalendar") ? (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20">Connected</span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-800 text-gray-400 border border-gray-700">Not Connected</span>
+                  )}
+                </h3>
+                <p className="text-[11px] text-[#8b949e] mt-0.5">Manage your Google Calendar integration.</p>
               </div>
-              <button
-                onClick={() => handleRemovePlugin("googlecalendar")}
-                disabled={isRemovingPlugin}
-                className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-              >
-                Disconnect
-              </button>
+              {isLoadingPlugins ? (
+                <div className="h-8 w-24 bg-gray-800/50 rounded-lg animate-pulse"></div>
+              ) : connectedPlugins.includes("googlecalendar") ? (
+                <button
+                  onClick={() => handleRemovePlugin("googlecalendar")}
+                  disabled={isRemovingPlugin}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#ea4335]/30 hover:border-[#ea4335] text-[#ea4335] hover:bg-[#ea4335]/10 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = "/api/connect?plugin=googlecalendar"}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-transparent border border-[#10b981]/30 hover:border-[#10b981] text-[#10b981] hover:bg-[#10b981]/10 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Connect
+                </button>
+              )}
             </div>
           </div>
         </div>
