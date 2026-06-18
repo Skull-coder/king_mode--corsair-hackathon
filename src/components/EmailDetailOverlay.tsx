@@ -5,6 +5,7 @@ import {
   useToggleStar,
   useModifyEmail,
   useDeleteEmail,
+  useTrashEmail,
   useThread,
   useSendEmail,
 } from "@/lib/hooks/useEmails";
@@ -137,9 +138,101 @@ function getAvatarStyle(name: string) {
   return "bg-gray-800 text-gray-300 border-gray-700";
 }
 
+// ─── Context Action Bar (shown at top of archive/trash thread view) ──────────
+
+function ContextActionBar({
+  threadId,
+  context,
+  onDone,
+}: {
+  threadId: string;
+  context: "archive" | "trash";
+  onDone: () => void;
+}) {
+  const { mutate: modifyEmail, isPending: isModifying } = useModifyEmail();
+  const { mutate: trashEmail, isPending: isTrashing } = useTrashEmail();
+  const { addToast } = useToast();
+
+  const isLoading = isModifying || isTrashing;
+
+  if (context === "trash") {
+    return (
+      <div className="flex items-center gap-2">
+        {/* Restore from Trash */}
+        <button
+          onClick={() =>
+            modifyEmail(
+              { messageId: threadId, untrash: true },
+              {
+                onSuccess: () => {
+                  addToast("success", "Restored to Inbox");
+                  onDone();
+                },
+                onError: () => addToast("error", "Failed to restore"),
+              },
+            )
+          }
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-[#5c4dff] hover:bg-[#4b3be0] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-[#5c4dff]/20"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+          {isModifying ? "Restoring..." : "Restore to Inbox"}
+        </button>
+      </div>
+    );
+  }
+
+  // context === "archive"
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() =>
+          modifyEmail(
+            { messageId: threadId, unarchive: true },
+            {
+              onSuccess: () => {
+                addToast("success", "Moved to Inbox");
+                onDone();
+              },
+              onError: () => addToast("error", "Failed to unarchive"),
+            },
+          )
+        }
+        disabled={isLoading}
+        className="flex items-center gap-2 px-4 py-2 bg-[#5c4dff] hover:bg-[#4b3be0] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-[#5c4dff]/20"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        {isModifying ? "Moving..." : "Move to Inbox"}
+      </button>
+      <button
+        onClick={() =>
+          trashEmail(threadId, {
+            onSuccess: () => {
+              addToast("success", "Moved to Trash");
+              onDone();
+            },
+            onError: () => addToast("error", "Failed to trash"),
+          })
+        }
+        disabled={isLoading}
+        className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-red-900/20 border border-red-800/50 hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-red-400 text-sm font-semibold rounded-lg transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        {isTrashing ? "Moving..." : "Move to Trash"}
+      </button>
+    </div>
+  );
+}
+
 interface EmailDetailOverlayProps {
   threadId: string;
-  context: "inbox" | "sent";
+  context: "inbox" | "sent" | "archive" | "trash";
   onClose: () => void;
 }
 
@@ -171,7 +264,9 @@ export function EmailDetailOverlay({
 
   const handleClose = () => {
     onClose();
-    router.push(`/email/${context}`);
+    if (context === "archive") router.push("/email/archives");
+    else if (context === "trash") router.push("/email/trash");
+    else router.push(`/email/${context}`);
   };
 
   if (isLoading) {
@@ -261,10 +356,16 @@ export function EmailDetailOverlay({
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-sm mb-6 font-medium">
           <Link
-            href={`/email/${context}`}
+            href={
+              context === "archive"
+                ? "/email/archives"
+                : context === "trash"
+                  ? "/email/trash"
+                  : `/email/${context}`
+            }
             className="text-[#5c4dff] hover:text-[#7b6dff] transition-colors capitalize"
           >
-            {context}
+            {context === "archive" ? "Archives" : context === "trash" ? "Trash" : context}
           </Link>
           <span className="text-[#8b949e]">
             <svg
@@ -284,7 +385,14 @@ export function EmailDetailOverlay({
           </span>
         </div>
 
-        <h1 className="text-2xl font-semibold text-gray-100 mb-6">{subject}</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-gray-100">{subject}</h1>
+          {(context === "archive" || context === "trash") && (
+            <div className="flex items-center gap-2">
+              <ContextActionBar threadId={threadId} context={context} onDone={handleClose} />
+            </div>
+          )}
+        </div>
 
         {/* Messages */}
         <div className="flex flex-col gap-4">
@@ -614,7 +722,7 @@ export default ReplyPanel;
 
 interface MessageCardProps {
   email: ParsedEmail;
-  context: "inbox" | "sent";
+  context: "inbox" | "sent" | "archive" | "trash";
   isLast: boolean;
   onDeleted: () => void;
   onReply: () => void;
@@ -629,7 +737,7 @@ function MessageCard({
 }: MessageCardProps) {
   const { mutate: toggleStar } = useToggleStar();
   const { mutate: modifyEmail } = useModifyEmail();
-  const { mutate: deleteEmail } = useDeleteEmail();
+  const { mutate: trashEmail } = useTrashEmail();
   const { addToast } = useToast();
 
   // collapse older messages by default, expand the last one
@@ -637,7 +745,7 @@ function MessageCard({
   const [showEventModal, setShowEventModal] = useState(false);
 
   const displayPerson =
-    context === "inbox"
+    context === "inbox" || context === "archive" || context === "trash"
       ? email.from || "Unknown Sender"
       : email.to || "(No Recipients)";
   const nameMatch = displayPerson.match(/^([^<]+)/);
@@ -748,43 +856,81 @@ function MessageCard({
                 />
               </svg>
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-[#1a1d27] border border-gray-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-              <button
-                onClick={() => setShowEventModal(true)}
-                className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 rounded-t-xl border-b border-gray-700"
-              >
-                Create Event
-              </button>
-              <button
-                onClick={() =>
-                  deleteEmail(email.id, {
-                    onSuccess: () => {
-                      addToast("success", "Deleted");
-                      onDeleted();
-                    },
-                  })
-                }
-                className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-gray-800"
-              >
-                Delete Message
-              </button>
-              <button
-                onClick={() =>
-                  modifyEmail(
-                    { messageId: email.id, archive: true },
-                    {
+              <div className="absolute right-0 mt-2 w-52 bg-[#1a1d27] border border-gray-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <button
+                  onClick={() => setShowEventModal(true)}
+                  className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 rounded-t-xl border-b border-gray-700"
+                >
+                  Create Event
+                </button>
+                <button
+                  onClick={() =>
+                    trashEmail(email.id, {
                       onSuccess: () => {
-                        addToast("success", "Archived");
+                        addToast("success", "Moved to Trash");
                         onDeleted();
                       },
-                    },
-                  )
-                }
-                className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 rounded-b-xl border-t border-gray-700"
-              >
-                Archive
-              </button>
-            </div>
+                    })
+                  }
+                  className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-gray-800"
+                >
+                  Move to Trash
+                </button>
+                {context === "archive" && (
+                  <button
+                    onClick={() =>
+                      modifyEmail(
+                        { messageId: email.id, unarchive: true },
+                        {
+                          onSuccess: () => {
+                            addToast("success", "Moved to Inbox");
+                            onDeleted();
+                          },
+                        },
+                      )
+                    }
+                    className="w-full text-left px-4 py-3 text-sm text-[#5c4dff] hover:bg-gray-800 rounded-b-xl border-t border-gray-700"
+                  >
+                    Move to Inbox
+                  </button>
+                )}
+                {context === "trash" && (
+                  <button
+                    onClick={() =>
+                      modifyEmail(
+                        { messageId: email.id, untrash: true },
+                        {
+                          onSuccess: () => {
+                            addToast("success", "Restored to Inbox");
+                            onDeleted();
+                          },
+                        },
+                      )
+                    }
+                    className="w-full text-left px-4 py-3 text-sm text-[#5c4dff] hover:bg-gray-800 rounded-b-xl border-t border-gray-700"
+                  >
+                    Restore from Trash
+                  </button>
+                )}
+                {context !== "archive" && context !== "trash" && (
+                  <button
+                    onClick={() =>
+                      modifyEmail(
+                        { messageId: email.id, archive: true },
+                        {
+                          onSuccess: () => {
+                            addToast("success", "Archived");
+                            onDeleted();
+                          },
+                        },
+                      )
+                    }
+                    className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 rounded-b-xl border-t border-gray-700"
+                  >
+                    Archive
+                  </button>
+                )}
+              </div>
           </div>
         </div>
       </div>

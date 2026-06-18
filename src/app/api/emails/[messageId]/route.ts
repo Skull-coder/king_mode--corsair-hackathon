@@ -4,8 +4,8 @@ import { parseEmail } from "@/lib/email";
 
 /**
  * GET    /api/emails/:messageId  → fetch single email (full format, parsed)
- * PATCH  /api/emails/:messageId  → star / mark read / archive
- * DELETE /api/emails/:messageId  → trash (delete) email
+ * PATCH  /api/emails/:messageId  → star / mark read / archive / unarchive / untrash
+ * DELETE /api/emails/:messageId  → move to trash (Gmail trash, NOT permanent delete)
  */
 export async function GET(
   _request: NextRequest,
@@ -39,6 +39,14 @@ export async function PATCH(
     const { messageId } = await params;
     const body = await request.json();
 
+    // ── Untrash: restore from Trash back to Inbox ─────────────────────────────
+    // Must be handled before the generic modify block since it's a separate API call.
+    if (body.untrash === true) {
+      const result = await tenant.gmail.api.messages.untrash({ id: messageId });
+      return NextResponse.json(result);
+    }
+
+    // ── Label modifications ───────────────────────────────────────────────────
     const addLabelIds: string[] = [];
     const removeLabelIds: string[] = [];
 
@@ -50,8 +58,11 @@ export async function PATCH(
     if (body.read === true) removeLabelIds.push("UNREAD");
     if (body.read === false) addLabelIds.push("UNREAD");
 
-    // archive (remove INBOX)
+    // archive (remove INBOX label)
     if (body.archive === true) removeLabelIds.push("INBOX");
+
+    // unarchive (add INBOX label back)
+    if (body.unarchive === true) addLabelIds.push("INBOX");
 
     if (addLabelIds.length === 0 && removeLabelIds.length === 0) {
       return NextResponse.json({ error: "No valid action specified" }, { status: 400 });
@@ -73,6 +84,10 @@ export async function PATCH(
   }
 }
 
+/**
+ * Moves the message to Trash. Google does NOT allow permanent deletion via API
+ * for user messages — trash is the only supported removal action.
+ */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ messageId: string }> }
@@ -88,7 +103,7 @@ export async function DELETE(
     if (error.message === "Unauthorized") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-    console.error("Error deleting email:", error);
-    return NextResponse.json({ error: "Failed to delete email" }, { status: 500 });
+    console.error("Error trashing email:", error);
+    return NextResponse.json({ error: "Failed to move email to trash" }, { status: 500 });
   }
 }

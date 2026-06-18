@@ -31,6 +31,32 @@ export function useEmails(label: "INBOX" | "DRAFT" | "SENT") {
   });
 }
 
+// ─── Archives ─────────────────────────────────────────────────────────────────
+
+export function useArchiveEmails() {
+  return useInfiniteQuery<EmailListResponse>({
+    queryKey: ["emails", "archives"],
+    queryFn: ({ pageParam }) =>
+      fetchJSON(`${API}/archives${pageParam ? `?pageToken=${pageParam}` : ""}`),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextPageToken ?? undefined,
+    staleTime: 30 * 60 * 1000,
+  });
+}
+
+// ─── Trash ────────────────────────────────────────────────────────────────────
+
+export function useTrashEmails() {
+  return useInfiniteQuery<EmailListResponse>({
+    queryKey: ["emails", "trash"],
+    queryFn: ({ pageParam }) =>
+      fetchJSON(`${API}/trash${pageParam ? `?pageToken=${pageParam}` : ""}`),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextPageToken ?? undefined,
+    staleTime: 30 * 60 * 1000,
+  });
+}
+
 // ─── Single email ─────────────────────────────────────────────────────────────
 
 export function useEmail(messageId: string | null) {
@@ -91,6 +117,8 @@ export function useModifyEmail() {
       star?: boolean;
       read?: boolean;
       archive?: boolean;
+      unarchive?: boolean;
+      untrash?: boolean;
     }) =>
       fetch(`${API}/${messageId}`, {
         method: "PATCH",
@@ -103,7 +131,11 @@ export function useModifyEmail() {
   });
 }
 
-export function useDeleteEmail() {
+/**
+ * Moves a message to Trash via DELETE → messages.trash().
+ * Google does NOT allow permanent deletion via the API.
+ */
+export function useTrashEmail() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (messageId: string) =>
@@ -113,6 +145,12 @@ export function useDeleteEmail() {
     },
   });
 }
+
+/**
+ * @deprecated Use useTrashEmail instead — Google doesn't allow permanent deletion.
+ * Kept as an alias so existing callers continue to work without changes.
+ */
+export const useDeleteEmail = useTrashEmail;
 
 // ─── Star ─────────────────────────────────────────────────────────────────────
 

@@ -58,10 +58,10 @@ export default function RemindersPage() {
         <h1 className="text-2xl font-bold mb-6">Reminders</h1>
 
         {/* Navigation Tabs */}
-        <div className="flex space-x-6 border-b border-gray-800 pb-3 mb-6">
+        <div className="flex space-x-1 border-b border-gray-800 pb-3 mb-6 overflow-x-auto">
           <Link
             href="/email/inbox"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -80,7 +80,7 @@ export default function RemindersPage() {
           </Link>
           <Link
             href="/email/sent"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -99,7 +99,7 @@ export default function RemindersPage() {
           </Link>
           <Link
             href="/email/drafts"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -118,7 +118,7 @@ export default function RemindersPage() {
           </Link>
           <Link
             href="/email/reminders"
-            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors"
+            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -134,6 +134,44 @@ export default function RemindersPage() {
               />
             </svg>
             <span>Reminders</span>
+          </Link>
+          <Link
+            href="/email/archives"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2L19 8"
+              />
+            </svg>
+            <span>Archives</span>
+          </Link>
+          <Link
+            href="/email/trash"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            <span>Trash</span>
           </Link>
         </div>
 

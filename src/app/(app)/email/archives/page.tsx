@@ -1,12 +1,12 @@
 "use client";
 
-import { useEmails } from "@/lib/hooks/useEmails";
+import { useArchiveEmails } from "@/lib/hooks/useEmails";
 import { useSSE } from "@/lib/hooks/useSSE";
 import { EmailList } from "@/components/EmailList";
 import { EmailListSkeleton } from "@/components/LoadingSkeleton";
 import Link from "next/link";
 
-export default function InboxPage() {
+export default function ArchivesPage() {
   useSSE();
   const {
     data,
@@ -15,20 +15,38 @@ export default function InboxPage() {
     isFetchingNextPage,
     isLoading,
     error,
-  } = useEmails("INBOX");
+  } = useArchiveEmails();
 
   const allMessages = data?.pages.flatMap((p) => p.messages) ?? [];
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#0e1116] text-white overflow-y-auto">
       <div className="p-8 pb-4 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Inbox</h1>
+        <div className="flex items-center gap-3 mb-6">
+          {/* Archive icon */}
+          <div className="w-9 h-9 rounded-xl bg-[#5c4dff]/10 border border-[#5c4dff]/20 flex items-center justify-center flex-shrink-0">
+            <svg
+              className="w-4 h-4 text-[#5c4dff]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2L19 8"
+              />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold">Archives</h1>
+        </div>
 
         {/* Navigation Tabs */}
         <div className="flex space-x-1 border-b border-gray-800 pb-3 mb-6 overflow-x-auto">
           <Link
             href="/email/inbox"
-            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors whitespace-nowrap"
+            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -104,7 +122,7 @@ export default function InboxPage() {
           </Link>
           <Link
             href="/email/archives"
-            className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+            className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
               className="w-4 h-4"
@@ -142,6 +160,27 @@ export default function InboxPage() {
           </Link>
         </div>
 
+        {/* Info banner */}
+        <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-[#151821] border border-gray-800/80 rounded-xl text-sm text-[#8b949e]">
+          <svg
+            className="w-4 h-4 text-[#5c4dff] flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p>
+            These messages have been archived from your inbox. Open any message
+            to <span className="text-white font-medium">move it back to inbox</span> or delete it.
+          </p>
+        </div>
+
         {/* Main Content Area */}
         {isLoading ? (
           <EmailListSkeleton />
@@ -150,7 +189,7 @@ export default function InboxPage() {
             emails={allMessages}
             isLoading={isLoading}
             error={error as Error | null}
-            context="inbox"
+            context="archive"
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={() => fetchNextPage()}

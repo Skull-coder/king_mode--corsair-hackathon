@@ -31,7 +31,7 @@ export function EmailList({
   emails: ParsedEmail[];
   isLoading: boolean;
   error: Error | null;
-  context: "inbox" | "sent" | "draft";
+  context: "inbox" | "sent" | "draft" | "archive" | "trash";
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
@@ -51,6 +51,8 @@ export function EmailList({
       inbox: "No messages in inbox.",
       sent: "No sent messages.",
       draft: "No drafts.",
+      archive: "No archived messages.",
+      trash: "Trash is empty.",
     };
     return (
       <div className="flex items-center justify-center h-64 text-[#8b949e] bg-[#151821] rounded-xl border border-gray-800">
@@ -64,7 +66,7 @@ export function EmailList({
       {emails.map((email) => {
         const isDraft = email.isDraft;
         const displayPerson =
-          context === "inbox"
+          context === "inbox" || context === "archive" || context === "trash"
             ? email.from || "Unknown Sender"
             : email.to || "(No Recipients)";
         const displayDate =
@@ -76,7 +78,11 @@ export function EmailList({
             ? `/email/inbox/${email.threadId}`
             : context === "sent"
               ? `/email/sent/${email.threadId}`
-              : ""; // drafts use onEmailClick instead
+              : context === "archive"
+                ? `/email/archives/${email.threadId}`
+                : context === "trash"
+                  ? `/email/trash/${email.threadId}`
+                  : ""; // drafts use onEmailClick instead
 
         const rowContent = (
           <div className="flex gap-4 p-5 bg-[#151821] border border-gray-800/80 rounded-2xl hover:border-gray-700 hover:bg-[#1a1d27] cursor-pointer transition-all group">
@@ -171,7 +177,8 @@ export function EmailList({
 
       {/* Count */}
       <p className="text-xs text-[#8b949e] text-center pt-2">
-        {emails.length} {context === "draft" ? "drafts" : "messages"} loaded
+        {emails.length}{" "}
+        {context === "draft" ? "drafts" : context === "archive" ? "archived messages" : context === "trash" ? "trashed messages" : "messages"} loaded
       </p>
     </div>
   );
