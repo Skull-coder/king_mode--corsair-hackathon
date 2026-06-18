@@ -164,10 +164,12 @@ export default function DraftsPage() {
         isOpen={!!editingDraft}
         onClose={() => setEditingDraft(null)}
         initialTo={editingDraft?.to || ""}
+        initialCc={editingDraft?.cc || ""}
+        initialBcc={editingDraft?.bcc || ""}
         initialSubject={
           editingDraft?.subject === "(No Subject)" ? "" : editingDraft?.subject || ""
         }
-        initialBody={editingDraft?.textBody || editingDraft?.htmlBody || ""}
+        initialBody={editingDraft?.textBody || editingDraft?.htmlBody || editingDraft?.snippet || ""}
         draftId={editingDraft?.draftId}
       />
     </div>

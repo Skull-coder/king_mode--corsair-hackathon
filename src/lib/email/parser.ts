@@ -44,18 +44,34 @@ function getHeader(headers: Array<{ name?: string; value?: string }> | undefined
   return h?.value || "";
 }
 
-function extractBody(parts: any[] | undefined): { textBody: string | null; htmlBody: string | null } {
-  if (!parts || !Array.isArray(parts)) return { textBody: null, htmlBody: null };
+function extractBody(payload: any): { textBody: string | null; htmlBody: string | null } {
+  if (!payload) return { textBody: null, htmlBody: null };
 
-  const plainPart = parts.find((p: any) => p.mimeType === "text/plain");
-  const htmlPart = parts.find((p: any) => p.mimeType === "text/html");
+  let textBody: string | null = null;
+  let htmlBody: string | null = null;
 
-  const textBody = plainPart?.body?.data
-    ? Buffer.from(plainPart.body.data, "base64url").toString("utf-8")
-    : null;
-  const htmlBody = htmlPart?.body?.data
-    ? Buffer.from(htmlPart.body.data, "base64url").toString("utf-8")
-    : null;
+  // Sometimes the body is directly in the payload
+  if (payload.body?.data) {
+    const decoded = Buffer.from(payload.body.data, "base64url").toString("utf-8");
+    if (payload.mimeType === "text/html") {
+      htmlBody = decoded;
+    } else {
+      textBody = decoded;
+    }
+  }
+
+  // Otherwise, look in parts
+  if (payload.parts && Array.isArray(payload.parts)) {
+    const plainPart = payload.parts.find((p: any) => p.mimeType === "text/plain");
+    const htmlPart = payload.parts.find((p: any) => p.mimeType === "text/html");
+
+    if (plainPart?.body?.data) {
+      textBody = Buffer.from(plainPart.body.data, "base64url").toString("utf-8");
+    }
+    if (htmlPart?.body?.data) {
+      htmlBody = Buffer.from(htmlPart.body.data, "base64url").toString("utf-8");
+    }
+  }
 
   return { textBody, htmlBody };
 }
@@ -78,7 +94,7 @@ export function parseEmail(raw: any): ParsedEmail {
   const bcc = getHeader(headers, "Bcc") || "";
   const date = getHeader(headers, "Date") || "";
 
-  const { textBody, htmlBody } = extractBody(raw.payload?.parts);
+  const { textBody, htmlBody } = extractBody(raw.payload);
 
   return {
     id,

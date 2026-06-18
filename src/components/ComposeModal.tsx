@@ -9,6 +9,8 @@ interface ComposeModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTo?: string;
+  initialCc?: string;
+  initialBcc?: string;
   initialSubject?: string;
   initialBody?: string;
   draftId?: string;
@@ -53,6 +55,8 @@ export function ComposeModal({
   isOpen,
   onClose,
   initialTo = "",
+  initialCc = "",
+  initialBcc = "",
   initialSubject = "",
   initialBody = "",
   draftId,
@@ -62,6 +66,9 @@ export function ComposeModal({
   const createReminder = useCreateReminder(); // ← new hook
 
   const [to, setTo] = useState(initialTo);
+  const [cc, setCc] = useState(initialCc);
+  const [bcc, setBcc] = useState(initialBcc);
+  const [showCcBcc, setShowCcBcc] = useState(false);
   const [subject, setSubject] = useState(initialSubject);
   const [body, setBody] = useState(initialBody);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,13 +82,16 @@ export function ComposeModal({
   useEffect(() => {
     if (isOpen) {
       setTo(initialTo);
+      setCc(initialCc);
+      setBcc(initialBcc);
       setSubject(initialSubject);
       setBody(initialBody);
       setShowReminder(false);
       setRemindOption(null);
       setCustomDate("");
+      if (initialCc || initialBcc) setShowCcBcc(true);
     }
-  }, [isOpen, initialTo, initialSubject, initialBody]);
+  }, [isOpen, initialTo, initialCc, initialBcc, initialSubject, initialBody]);
 
   // Calculate remindAfter from selection
   const computeRemindAfter = (): Date | null => {
@@ -121,7 +131,7 @@ export function ComposeModal({
         const res = await fetch(`/api/drafts/${draftId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to, subject, body }),
+          body: JSON.stringify({ to, cc, bcc, subject, body }),
         });
         if (!res.ok) throw new Error("Failed to update draft");
         addToast("success", "Draft updated");
@@ -129,7 +139,7 @@ export function ComposeModal({
         const res = await fetch("/api/drafts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to, subject, body }),
+          body: JSON.stringify({ to, cc, bcc, subject, body }),
         });
         if (!res.ok) throw new Error("Failed to save draft");
         addToast("success", "Draft saved");
@@ -167,7 +177,7 @@ export function ComposeModal({
         const draftRes = await fetch("/api/drafts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to, subject, body }),
+          body: JSON.stringify({ to, cc, bcc, subject, body }),
         });
         if (!draftRes.ok) throw new Error("Failed to prepare email");
         const draft = await draftRes.json();
@@ -240,21 +250,62 @@ export function ComposeModal({
         <div className="p-5 flex flex-col gap-4">
           
           {/* To Field */}
-          <div className="flex items-center gap-4 text-sm">
-            <label className="text-[#8b949e] w-12 font-medium">To</label>
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="<receiver_email_address>"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="flex-1 bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] transition-colors"
-              />
-              <button className="p-2.5 bg-[#0e1116] border border-gray-800 rounded-lg text-[#8b949e] hover:text-white hover:border-gray-600 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                </svg>
-              </button>
+          <div>
+            <div className="flex items-center gap-4 text-sm">
+              <label className="text-[#8b949e] w-12 font-medium">To</label>
+              <div className="flex-1 flex items-center gap-2 relative">
+                <input
+                  type="text"
+                  placeholder="<receiver_email_address>"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="flex-1 bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2.5 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] transition-colors"
+                />
+                <button
+                  onClick={() => setShowCcBcc(!showCcBcc)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-2.5 pl-2 text-[#8b949e] hover:text-white transition-colors"
+                  title="Add CC / BCC"
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${showCcBcc ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* CC / BCC dropdown */}
+            <div
+              className={`transition-all duration-200 ease-in-out overflow-hidden ${
+                showCcBcc ? "max-h-40 opacity-100 mt-3" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4 text-sm">
+                  <label className="text-[#8b949e] w-12 font-medium">Cc</label>
+                  <input
+                    type="text"
+                    value={cc}
+                    onChange={(e) => setCc(e.target.value)}
+                    placeholder="cc@email.com"
+                    className="flex-1 bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <label className="text-[#8b949e] w-12 font-medium">Bcc</label>
+                  <input
+                    type="text"
+                    value={bcc}
+                    onChange={(e) => setBcc(e.target.value)}
+                    placeholder="bcc@email.com"
+                    className="flex-1 bg-[#0e1116] border border-gray-800 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[#5c4dff] transition-colors"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
