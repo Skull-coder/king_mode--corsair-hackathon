@@ -72,7 +72,7 @@ export default function TrashPage() {
             <span>Drafts</span>
           </Link>
           <Link
-            href="/email/reminders"
+            href="/email/follow-ups"
             className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

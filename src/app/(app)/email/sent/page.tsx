@@ -78,7 +78,7 @@ export default function SentPage() {
             <span>Drafts</span>
           </Link>
           <Link
-            href="/email/reminders"
+            href="/email/follow-ups"
             className="flex items-center space-x-2 text-[#8b949e] hover:text-white font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg

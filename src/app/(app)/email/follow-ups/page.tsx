@@ -1,4 +1,4 @@
-// app/email/reminders/page.tsx
+// app/email/follow-ups/page.tsx
 "use client";
 
 import { useReminders, useUpdateReminder } from "@/lib/hooks/use-reminders";
@@ -109,7 +109,7 @@ export default function RemindersPage() {
             <span>Drafts</span>
           </Link>
           <Link
-            href="/email/reminders"
+            href="/email/follow-ups"
             className="flex items-center space-x-2 text-[#5c4dff] font-medium px-4 py-2 bg-[#5c4dff]/10 rounded-lg transition-colors whitespace-nowrap"
           >
             <svg
