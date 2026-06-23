@@ -236,10 +236,9 @@ export default function LandingPage() {
               <span className="px-2 py-1 bg-white/[0.03] border border-white/[0.05] rounded text-gray-300">Corsair</span>
             </div>
           </div>
-          
           <div className="flex items-center gap-6">
-            <Link href="/privacy-policy" className="text-xs text-[#8b949e] hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms-of-service" className="text-xs text-[#8b949e] hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="text-xs text-[#8b949e] hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-xs text-[#8b949e] hover:text-white transition-colors">Terms of Service</Link>
             <p className="text-xs text-[#8b949e]">&copy; {new Date().getFullYear()} King Mode. All rights reserved.</p>
           </div>
         </div>
